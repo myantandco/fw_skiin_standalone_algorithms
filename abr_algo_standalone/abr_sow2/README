@@ -1,0 +1,52 @@
+SOW2 Deliverable
+================
+
+This folder contains all the code developed for Myant by ABR
+as part of SOW 2.
+
+Running with the TFLite Simulator
+---------------------------------
+The easiest way to run the model in Python is with the TFLite simulator.
+The code for facilitating this is all contained in this root folder.
+The entry point is `main.py`. Running this script will execute the model
+on the data specified in `main.py`.
+
+NOTE: This is currently only the chest model, but this code will be extended
+to the waist model as well in the future.
+
+The results will be stored in the `results` folder. By default, the model
+will look for an `outputs.npy` file in `results`, and if it exists will
+use those outputs rather than re-running the model.
+
+NOTE: Anyone wishing to re-run the model on the data should move the
+results folder to another location (e.g. `results-original`) so that
+the script will create a new `results` folder and re-run everything.
+
+
+Running with the C++ Library on CPU
+-----------------------------------
+The C++ library used for running on the pod can also be compiled for the CPU.
+This will give results that should match exactly what will be computed
+by the pod. Currently, this code uses the same small segment of test data
+that is used by the code for running on the pod. However, it could easily
+be modified to read and write data to a file for large-scale testing.
+
+To run this model, use the `pod/run-cpu.sh` script.
+
+
+Running with the C++ Library on Pod
+-----------------------------------
+To run the pod model on an actual device (i.e. Nordic dev board), we use
+the same code but compiled for ARM.
+
+Use the `pod/run.sh` script (with the environment variables in that script
+modified for your machine) to compile and run on the Nordic board.
+
+See the `pod/README.md` file for more information.
+
+
+Recompiling the pod libraries
+-----------------------------
+We have provided the source code for the pod libraries in `pod/pod-lib`.
+The README file there contains more information, but it should be
+a straightforward process.

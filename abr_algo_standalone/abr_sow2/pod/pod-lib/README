@@ -1,0 +1,6 @@
+Pod Library
+===========
+This folder contains the source code to create the pod model library.
+
+The `maker.sh` script should perform all the necessary steps to compile
+libraries for both the ARM chip (pod) and CPU (for testing).
