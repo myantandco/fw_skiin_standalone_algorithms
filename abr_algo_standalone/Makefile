@@ -9,6 +9,7 @@ SRCS += abr/src/model.cpp
 SRCS += myant/data_processing.c
 SRCS += myant/abr_postprocess.c
 SRCS += myant/abr_preprocess.c
+SRCS += myant/csv_writers.c
 SRCS += myant/ecg_algo.cpp
 SRCS += main.c
 
@@ -32,7 +33,7 @@ BUILDDIR = ../build
 # library to be generated
 MAIN_BIN = abr_algorithm_standalone.exe
 
-$(BUILDDIR)/$(MAIN_BIN) : $(SRCS)
+$(BUILDDIR)/$(MAIN_BIN) : $(SRCS) config.h
 	$(CXX) $(CXXFLAGS) -o $@ $(SRCS) $(LDFLAGS)
 
 all: $(MAIN_BIN)
