@@ -86,7 +86,7 @@ void write_csv_header(const char *filename, const char **var_names, int num_vars
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
     {
-        FILE *file = fopen(filename, "w");
+        FILE *file = fopen(filePath, "w");
         if (file == NULL)
         {
             fprintf(stderr, "Error opening file: %s\n", filename);
@@ -112,7 +112,7 @@ void write_csv_row(const char *filename, float data[], int num_vars)
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
     {
-        FILE *file = fopen(filename, "a");
+        FILE *file = fopen(filePath, "a");
         if (file == NULL)
         {
             fprintf(stderr, "Error opening file: %s\n", filename);
