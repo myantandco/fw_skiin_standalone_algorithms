@@ -1,0 +1,225 @@
+# See https://clang.llvm.org/docs/ClangFormatStyleOptions.html for more details on each setting
+
+---
+# Master enable switch for formatter
+#DisableFormat: false
+
+# Language format style is targetted for (C++ encapsulates C)
+Language: Cpp
+
+# Alignment
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments: 
+    Enabled: true
+    AcrossEmptyLines: false
+    AcrossComments: false
+    AlignCompound: true
+    PadOperators: true
+AlignConsecutiveBitFields:
+    Enabled: true
+    AcrossEmptyLines: true
+    AcrossComments: true
+    AlignCompound: true
+    PadOperators: false
+AlignConsecutiveDeclarations:
+    Enabled: true
+    AcrossEmptyLines: true
+    AcrossComments: true
+    AlignCompound: true
+    PadOperators: false
+AlignConsecutiveMacros:
+    Enabled: true
+    AcrossEmptyLines: true
+    AcrossComments: true
+    AlignCompound: true
+    PadOperators: false
+AlignConsecutiveShortCaseStatements:
+    Enabled: true
+    AcrossEmptyLines: true
+    AcrossComments: true
+    AlignCaseColons: true
+AlignEscapedNewlines: Left
+AlignOperands: Align
+AlignTrailingComments: 
+    Kind: Always
+    OverEmptyLines: 1 
+
+# Exceptions
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: None
+AllowShortLoopsOnASingleLine: false
+
+# Arguments + Parameters
+BinPackArguments: false
+BinPackParameters: false
+
+# Brace wrapping
+BraceWrapping:
+    AfterCaseLabel: true
+    AfterClass: true
+    AfterControlStatement: Always
+    AfterEnum: true
+    AfterFunction: true
+    AfterNamespace: true
+    AfterStruct: true
+    AfterUnion: true
+    AfterExternBlock: true
+    BeforeCatch: true
+    BeforeElse: true
+    BeforeLambdaBody: true
+    BeforeWhile: false
+    IndentBraces: false
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: false
+
+# Line breaks
+AlwaysBreakBeforeMultilineStrings: false
+BreakAfterAttributes: Never 
+BreakBeforeBraces: Custom
+BreakBeforeConceptDeclarations: Never
+BreakBeforeInlineASMColon: OnlyMultiline
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterComma 
+BreakStringLiterals: true
+
+# Column limit (currently disabled)
+ColumnLimit: 80
+
+Cpp11BracedListStyle: true
+DerivePointerAlignment: false
+
+# Includes - Do not modify to avoid ordering errors
+IncludeBlocks: Preserve
+
+# Indentation
+BracedInitializerIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+IndentAccessModifiers: true
+IndentCaseBlocks: false
+IndentCaseLabels: true
+IndentExternBlock: AfterExternBlock
+IndentGotoLabels: false
+IndentPPDirectives: None
+IndentWidth: 4
+IndentWrappedFunctionNames: true
+
+# Inserts
+InsertBraces: true
+InsertNewlineAtEOF: true
+
+# Integer value formatting
+IntegerLiteralSeparator:
+    Binary: -1
+    Decimal: -1
+    Hex: -1
+
+# Empty lines
+KeepEmptyLinesAtEOF: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+
+# Line endings
+LineEnding: DeriveCRLF
+
+# Penalties 
+PenaltyBreakAssignment: 0
+PenaltyBreakBeforeFirstCallParameter: 0
+PenaltyBreakComment: 0
+PenaltyBreakFirstLessLess: 0
+PenaltyBreakOpenParenthesis: 0
+PenaltyBreakString: 0
+PenaltyBreakTemplateDeclaration: 0
+PenaltyExcessCharacter: 0
+PenaltyIndentedWhitespace: 0
+PenaltyReturnTypeOnItsOwnLine: 0
+
+# Qualifier Settings
+QualifierAlignment: Custom
+QualifierOrder: ['static', 'volatile', 'inline', 'const', 'type']
+
+# Alignment of pointer and reference symbols
+PointerAlignment: Right
+ReferenceAlignment: Right 
+
+# Comment reflowed to fit column width
+ReflowComments: true
+
+# Remove settings, disabled to prevent unexpected build errors 
+RemoveBracesLLVM: false
+RemoveSemicolon: false
+
+# New lines seperators for distinct functional blocks
+SeparateDefinitionBlocks: Always
+
+# Sorting
+SortIncludes: CaseSensitive
+SortUsingDeclarations: LexicographicNumeric
+
+# Spacing
+BitFieldColonSpacing: After
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: false
+SpaceAroundPointerQualifiers: Both
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+    AfterControlStatements: true
+    AfterForeachMacros: true
+    AfterFunctionDefinitionName: false
+    AfterIfMacros: true
+    AfterOverloadedOperator: false
+    AfterRequiresInClause: false
+    AfterRequiresInExpression: false
+    BeforeNonEmptyParentheses: false
+SpaceBeforeRangeBasedForLoopColon: false
+SpaceBeforeSquareBrackets: false
+SpacesBeforeTrailingComments: 4
+SpacesInAngles: Never
+SpaceInEmptyBlock: false
+SpacesInLineCommentPrefix:
+    Minimum: 1
+    Maximum: -1
+SpacesInParens: Never
+SpacesInParensOptions:
+    InConditionalStatements: false
+    InCStyleCasts: false
+    InEmptyParentheses: false
+    Other: false
+SpacesInSquareBrackets: false
+
+# Language Standard
+Standard: Auto
+
+# Tabs are replaced with spaces with width = 4
+PPIndentWidth: -1
+TabWidth: 4
+UseTab: Never
+
+# C++ Settings (included for completeness)
+AccessModifierOffset: 0
+CompactNamespaces: false
+EmptyLineAfterAccessModifier: Always
+EmptyLineBeforeAccessModifier: LogicalBlock
+FixNamespaceComments: true
+NamespaceIndentation: All
+PackConstructorInitializers: CurrentLine 
+RequiresClausePosition: WithPreceding
+RequiresExpressionIndentation: OuterScope
+ShortNamespaceLines: 1
+
+...
