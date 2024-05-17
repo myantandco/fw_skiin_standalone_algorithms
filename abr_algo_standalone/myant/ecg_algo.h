@@ -13,6 +13,8 @@ extern "C" {
 #include "abr_preprocess.h"
 
 #define ECG_ALGO_OUTPUT_SIZE    1
+//ABR model definitions
+#define ABR_INPUT_BASELINE_VALUE        685.7142857142857l
 
 void ecg_algo_update_garmentid(garment_id_e id);
 void ecg_algo_init(void);

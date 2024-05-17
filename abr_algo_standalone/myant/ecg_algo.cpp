@@ -5,9 +5,6 @@
 #include "custom_waist.h"
 #include "model.h"
 
-//ABR model definitions
-#define ABR_INPUT_BASELINE_VALUE        685.7142857142857l
-
 //Low pass definitions
 #define LP_FILTER_SIZE                  2
 #define LP_FILTER_COEFF_LEN_A           2
