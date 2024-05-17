@@ -1,14 +1,14 @@
+#include "csv_writers.h"
+#include "config.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include <sys/stat.h> // For mkdir()
-#include <windows.h>  // For Windows-specific functions
-#include "config.h"
-#include "csv_writers.h"
+#include <sys/stat.h>    // For mkdir()
+#include <windows.h>     // For Windows-specific functions
 
-#define MAX_COLS 3 // maximum number of columns in the CSV file
+#define MAX_COLS 3       // maximum number of columns in the CSV file
 
 int folderExists(const char *folderName)
 {
@@ -50,22 +50,22 @@ void read_csv(const char *filename, float input_ch1[], float input_ch2[], float 
     {
         // Tokenize the line using strtok
         char *token = strtok(line, ",");
-        int col = 0;
+        int   col   = 0;
         while (token != NULL && col < MAX_COLS)
         {
             // Convert token to float and store in the appropriate array
             {
                 switch (col)
                 {
-                case 0:
-                    input_ch1[*num_rows] = atof(token);
-                    break;
-                case 1:
-                    input_ch2[*num_rows] = atof(token);
-                    break;
-                case 2:
-                    input_ch3[*num_rows] = atof(token);
-                    break;
+                    case 0:
+                        input_ch1[*num_rows] = (float)atof(token);
+                        break;
+                    case 1:
+                        input_ch2[*num_rows] = (float)atof(token);
+                        break;
+                    case 2:
+                        input_ch3[*num_rows] = (float)atof(token);
+                        break;
                 }
             }
             // Move to the next token
@@ -79,10 +79,10 @@ void read_csv(const char *filename, float input_ch1[], float input_ch2[], float 
     fclose(file);
 }
 
-void write_csv_header(const char *filename, const char **var_names, int num_vars)
+void write_csv_header(const char *filename, const char *var_names)
 {
     createFolderIfNotExists(RES_FOLDER);
-    char filePath[200]; // Adjust the size according to your need
+    char filePath[200];    // Adjust the size according to your need
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
     {
@@ -94,13 +94,7 @@ void write_csv_header(const char *filename, const char **var_names, int num_vars
         }
 
         // Write the header row with variable names
-        fprintf(file, "%s", var_names[0]);
-        for (int i = 1; i < num_vars; i++)
-        {
-            fprintf(file, ",%s", var_names[i]);
-        }
-        fprintf(file, "\n");
-
+        fprintf(file, "%s\n", var_names);
         fclose(file);
     }
 }
@@ -108,7 +102,7 @@ void write_csv_header(const char *filename, const char **var_names, int num_vars
 void write_csv_row(const char *filename, float data[], int num_vars)
 {
     createFolderIfNotExists(RES_FOLDER);
-    char filePath[200]; // Adjust the size according to your need
+    char filePath[200];    // Adjust the size according to your need
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
     {
@@ -134,7 +128,7 @@ void write_csv_row(const char *filename, float data[], int num_vars)
 void write_csv_single(const char *filename, float data, int ecg_ch)
 {
     createFolderIfNotExists(RES_FOLDER);
-    char filePath[200]; // Adjust the size according to your need
+    char filePath[200];    // Adjust the size according to your need
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
     {
