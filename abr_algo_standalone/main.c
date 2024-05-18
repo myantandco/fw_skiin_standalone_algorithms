@@ -10,8 +10,8 @@
 #include <string.h>
 
 #define GARMENT_ID_DEFAULT \
-    GARMENT_UNDERWEAR    // Assume underwear, all other garments function the
-                         // same way
+    GARMENT_CHEST_BAND    // Assume underwear, all other garments function the
+                          // same way
 #define NOTCH_FILTER_FREQ            false    // False = 60 Hz, True = 50 Hz
 
 #define ECG_ROLLING_DATA_BUFFER_SIZE 3
