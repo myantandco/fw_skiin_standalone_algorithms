@@ -18,7 +18,7 @@ extern "C" {
 
 void ecg_algo_update_garmentid(garment_id_e id);
 void ecg_algo_init(void);
-bool ecg_algo_run(double *data, uint8_t ch_count, bool restart);
+bool ecg_algo_run(float *data, uint8_t ch_count, bool restart);
 void ecg_algo_get_output(float *outputs, uint8_t len);
 
 #ifdef __cplusplus

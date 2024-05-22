@@ -18,11 +18,8 @@
 #define ECG_ALGO_OUTPUT_SIZE         1
 #define ECG_DATA_BUFFER_SIZE         24
 
-static double            ecg_data_buffer_channel_1[ECG_DATA_BUFFER_SIZE] = {0};
-static double            ecg_data_buffer_channel_2[ECG_DATA_BUFFER_SIZE] = {0};
-static double            ecg_data_buffer_channel_3[ECG_DATA_BUFFER_SIZE] = {0};
-static volatile uint32_t ecg_data_count                                  = 0;
-static volatile uint32_t sample_count                                    = 0;
+static volatile uint32_t ecg_data_count = 0;
+static volatile uint32_t sample_count   = 0;
 
 int                      main(int argc, const char *argv[])
 {
@@ -32,7 +29,7 @@ int                      main(int argc, const char *argv[])
                                       // false afterwards
 
     // Intermediate data
-    double        buffer[ECG_ROLLING_DATA_BUFFER_SIZE] = {0.0};
+    float         buffer[ECG_ROLLING_DATA_BUFFER_SIZE] = {0.0};
     float         algo_output[ECG_ALGO_OUTPUT_SIZE]    = {0};
 
     // Outputs
@@ -93,6 +90,8 @@ int                      main(int argc, const char *argv[])
             abr_pp_get_rpeak(&rpeak_max, &rpeak_index);
             ble[0] = (float)rpeak_index;
             ble[1] = (float)rpeak_max;
+            // printf("%d", i);
+            // printf("\r\n");
             for (uint8_t j = 0; j < MAX_ECG; j++)
             {
                 abr_prep_get_quality((ecg_sens_id)j, &q_class, &slope);
@@ -105,6 +104,7 @@ int                      main(int argc, const char *argv[])
                 //        rpeak_index,
                 //        q_class,
                 //        slope);
+                // printf("ch%d: %d, ", j + 1, q_class);
                 ble[2 + j] = (float)q_class;
                 ble[5 + j] = (float)slope;
             }

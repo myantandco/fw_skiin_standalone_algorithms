@@ -4,8 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-
-double digital_filter(double input, double *in, double *out, const double *a, const double *b, uint8_t a_len, uint8_t b_len, uint8_t filter_order, bool reset, double initial_sample)
+float digital_filter(float input, float *in, float *out, const float *a, const float *b, uint8_t a_len, uint8_t b_len, uint8_t filter_order, bool reset, float initial_sample)
 {
     if ((a == NULL) || (b == NULL) || (in == NULL) || (out == NULL))
     {
@@ -22,8 +21,8 @@ double digital_filter(double input, double *in, double *out, const double *a, co
         return 0;
     }
 
-    double output = 0.0;
-    double tmp    = 0.0;
+    float output = 0.0;
+    float tmp    = 0.0;
 
     if (reset)
     {

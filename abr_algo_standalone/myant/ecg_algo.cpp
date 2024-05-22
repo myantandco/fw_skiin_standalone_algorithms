@@ -20,9 +20,9 @@ static float states[kStateInputSize] = {0};
 const unsigned char *model_buffer = g_model_waist;
 static garment_id_e gar_id = GARMENT_UNDERWEAR;
 
-static void preprocess_inputs(double *input, float *processed, bool restart)
+static void preprocess_inputs(float *input, float *processed, bool restart)
 {
-    double x = 0;
+    float x = 0;
 
     if((input == NULL) || (processed == NULL))
     {
@@ -70,10 +70,10 @@ void ecg_algo_init(void)
     initialized = true;
 }
 
-bool ecg_algo_run(double *data, uint8_t ch_count, bool restart)
+bool ecg_algo_run(float *data, uint8_t ch_count, bool restart)
 {
     int ret = -1;
-    double inp[kModelInputSize] = {0};
+    float inp[kModelInputSize] = {0};
     float preproc_inp[kModelInputSize] = {0};
 
     if (!initialized)

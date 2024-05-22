@@ -20,26 +20,26 @@
 #define KMODEL_INPUT_SIZE        3
 #define SLOPE_MAX                5
 
-static double notch_out[KMODEL_INPUT_SIZE][NOTCH_FILTER_SIZE] = {0};
-static double notch_in[KMODEL_INPUT_SIZE][NOTCH_FILTER_SIZE]  = {0};
+static float notch_out[KMODEL_INPUT_SIZE][NOTCH_FILTER_SIZE] = {0};
+static float notch_in[KMODEL_INPUT_SIZE][NOTCH_FILTER_SIZE]  = {0};
 
-static double a_notch[] = {1.0l, -1.50977727l, 2.5144414l, -1.4684226l, 0.94597794l};
-static double b_notch[] = {0.9726139l, -1.48909994l, 2.51519154l, -1.48909994l, 0.9726139l};
+static float a_notch[] = {1.0l, -1.50977727l, 2.5144414l, -1.4684226l, 0.94597794l};
+static float b_notch[] = {0.9726139l, -1.48909994l, 2.51519154l, -1.48909994l, 0.9726139l};
 
-static const double a_notch_60hz[] = {1.0l, -1.50977727l, 2.5144414l, -1.4684226l, 0.94597794l};
-static const double b_notch_60hz[] = {0.9726139l, -1.48909994l, 2.51519154l, -1.48909994l, 0.9726139l};
+static const float a_notch_60hz[] = {1.0l, -1.50977727l, 2.5144414l, -1.4684226l, 0.94597794l};
+static const float b_notch_60hz[] = {0.9726139l, -1.48909994l, 2.51519154l, -1.48909994l, 0.9726139l};
 
-static const double a_notch_50hz[] = {1.0l, -2.19185687l, 3.14576208l, -2.1318192l, 0.94597794l};
-static const double b_notch_50hz[] = {0.9726139l, -2.16183804l, 3.14651222l, -2.16183804l, 0.9726139l};
+static const float a_notch_50hz[] = {1.0l, -2.19185687l, 3.14576208l, -2.1318192l, 0.94597794l};
+static const float b_notch_50hz[] = {0.9726139l, -2.16183804l, 3.14651222l, -2.16183804l, 0.9726139l};
 
 typedef struct
 {
         uint8_t         slope;
-        double          max_diff;
+        float           max_diff;
         quality_class_e q_class;
         bool            noise_detect;
         uint8_t         latch;
-        double          filter_softness;
+        float           filter_softness;
 } quality_t;
 
 typedef enum
@@ -53,11 +53,11 @@ static notch_fq  notch_cnf_fq_flag     = FQ_60HZ;
 static quality_t quality_info[MAX_ECG] = {0};
 static bool      filter_restart        = false;
 
-static double  abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart);
-static uint8_t latch_sigmoid(double sample, ecg_sens_id ecg_id);
-static double  softness_filter(double sample, uint8_t ecg_ch, bool restart);
-static void abr_quality_slope(double sample, ecg_sens_id ecg_id, double *sample_diff, bool restart);
-static void abr_quality_process(float x, double sample, ecg_sens_id ecg_id, uint8_t *latch_out, double *filter_softness, bool *noise_detect, bool restart);
+static float   abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart);
+static uint8_t latch_sigmoid(float sample, ecg_sens_id ecg_id);
+static float   softness_filter(float sample, uint8_t ecg_ch, bool restart);
+static void abr_quality_slope(float sample, ecg_sens_id ecg_id, float *sample_diff, bool restart);
+static void abr_quality_process(float x, float sample, ecg_sens_id ecg_id, uint8_t *latch_out, float *filter_softness, bool *noise_detect, bool restart);
 
 /*
  * @brief  This function applies lowpass and high pass to the ecg signal.
@@ -66,23 +66,23 @@ static void abr_quality_process(float x, double sample, ecg_sens_id ecg_id, uint
  * output data.
  * @retval It returns filtered value to get_preprocess_out function.
  */
-static double abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart)
+static float abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart)
 {
-    double              output[] = {0, 0, 0};
+    float              output[] = {0, 0, 0};
 
-    static const double ah[] = {1.0l, -1.88349555l, 0.88991837l};
-    static const double bh[] = {0.94335348l, -1.88670696l, 0.94335348l};
+    static const float ah[] = {1.0l, -1.88349555l, 0.88991837l};
+    static const float bh[] = {0.94335348l, -1.88670696l, 0.94335348l};
 
-    static const double al[] = {1.0l, -1.09241307l, 0.3910474l};
-    static const double bl[] = {0.07465858l, 0.14931716l, 0.07465858l};
+    static const float al[] = {1.0l, -1.09241307l, 0.3910474l};
+    static const float bl[] = {0.07465858l, 0.14931716l, 0.07465858l};
 
-    static double       input_ecg[MAX_ECG][FILTER_LEN_ECG];
-    static double       output_temp[MAX_ECG][FILTER_LEN_ECG];
+    static float       input_ecg[MAX_ECG][FILTER_LEN_ECG];
+    static float       output_temp[MAX_ECG][FILTER_LEN_ECG];
 
-    static double       input_temp[MAX_ECG][FILTER_LEN_ECG];
-    static double       output_ecg[MAX_ECG][FILTER_LEN_ECG];
+    static float       input_temp[MAX_ECG][FILTER_LEN_ECG];
+    static float       output_ecg[MAX_ECG][FILTER_LEN_ECG];
 
-    output[ecg_id] = digital_filter((double)sample, input_ecg[ecg_id], output_temp[ecg_id], al, bl, 3, 3, FILTER_LEN_ECG, restart, 0);
+    output[ecg_id] = digital_filter((float)sample, input_ecg[ecg_id], output_temp[ecg_id], al, bl, 3, 3, FILTER_LEN_ECG, restart, 0);
 
     output[ecg_id] = digital_filter(output[ecg_id], input_temp[ecg_id], output_ecg[ecg_id], ah, bh, 3, 3, FILTER_LEN_ECG, restart, 0);
 
@@ -98,10 +98,10 @@ static double abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart)
  * sample
  * @retval Update the maximum diff between 2 ecg samples.
  */
-static void abr_quality_slope(double sample, ecg_sens_id ecg_id, double *sample_diff, bool restart)
+static void abr_quality_slope(float sample, ecg_sens_id ecg_id, float *sample_diff, bool restart)
 {
-    static double temp_slope[] = {0, 0, 0};
-    double        max          = 0;
+    static float temp_slope[] = {0, 0, 0};
+    float        max          = 0;
 
     if (restart)
     {
@@ -133,23 +133,23 @@ static void abr_quality_slope(double sample, ecg_sens_id ecg_id, double *sample_
  * output data.
  * @retval Updates, noise_detection flag, latch_out and filter_softness.
  */
-static void abr_quality_process(float x, double sample, ecg_sens_id ecg_id, uint8_t *latch_out, double *filter_softness, bool *noise_detect, bool restart)
+static void abr_quality_process(float x, float sample, ecg_sens_id ecg_id, uint8_t *latch_out, float *filter_softness, bool *noise_detect, bool restart)
 {
-    static const double ah[] = {1.0l, -0.9902304l};
-    static const double bh[] = {0.9951152l, -0.9951152l};
+    static const float ah[] = {1.0l, -0.9902304l};
+    static const float bh[] = {0.9951152l, -0.9951152l};
 
-    static const double al[] = {1.0l, -0.96148145l};
-    static const double bl[] = {0.01925927l, 0.01925927l};
+    static const float al[] = {1.0l, -0.96148145l};
+    static const float bl[] = {0.01925927l, 0.01925927l};
 
-    static double       input_lp[MAX_ECG][FILTER_LEN_QUALITY];
-    static double       output_lp[MAX_ECG][FILTER_LEN_QUALITY];
+    static float       input_lp[MAX_ECG][FILTER_LEN_QUALITY];
+    static float       output_lp[MAX_ECG][FILTER_LEN_QUALITY];
 
-    static double       input_hp[MAX_ECG][FILTER_LEN_QUALITY];
-    static double       output_hp[MAX_ECG][FILTER_LEN_QUALITY];
+    static float       input_hp[MAX_ECG][FILTER_LEN_QUALITY];
+    static float       output_hp[MAX_ECG][FILTER_LEN_QUALITY];
 
-    static double       quality[MAX_ECG]      = {0, 0, 0};
-    double              temp_quality[MAX_ECG] = {0, 0, 0};
-    double              quality_class_temp    = 0;
+    static float       quality[MAX_ECG]      = {0, 0, 0};
+    float              temp_quality[MAX_ECG] = {0, 0, 0};
+    float              quality_class_temp    = 0;
 
     temp_quality[ecg_id] = digital_filter(x, input_hp[ecg_id], output_hp[ecg_id], ah, bh, 2, 2, FILTER_LEN_QUALITY, restart, 0);
     write_csv_single("q1_point5filt.csv", temp_quality[ecg_id], ecg_id);
@@ -157,7 +157,7 @@ static void abr_quality_process(float x, double sample, ecg_sens_id ecg_id, uint
     // calculate abs value
     temp_quality[ecg_id] = temp_quality[ecg_id] - sample;
     write_csv_single("q2_subtractecg.csv", temp_quality[ecg_id], ecg_id);
-    temp_quality[ecg_id] = (double)fabs(temp_quality[ecg_id]);
+    temp_quality[ecg_id] = (float)fabs(temp_quality[ecg_id]);
     write_csv_single("q3_abs.csv", temp_quality[ecg_id], ecg_id);
 
     // lowpass 2Hz
@@ -173,11 +173,11 @@ static void abr_quality_process(float x, double sample, ecg_sens_id ecg_id, uint
 
     quality_class_temp = 1 - *filter_softness;
     write_csv_single("q7_qclass.csv", quality_class_temp, ecg_id);
-
-    if (quality_class_temp != 0)
+    if ((int)quality_class_temp != 0)
     {
         *noise_detect = true;
     }
+    write_csv_single("q8_noisedetect.csv", (int)*noise_detect, ecg_id);
 }
 
 /*
@@ -187,7 +187,7 @@ static void abr_quality_process(float x, double sample, ecg_sens_id ecg_id, uint
  * threshold values. Depending upon the filter quality the latch is updated.
  * @retval It returns the latch
  */
-static uint8_t latch_sigmoid(double quality, ecg_sens_id ecg_id)
+static uint8_t latch_sigmoid(float quality, ecg_sens_id ecg_id)
 {
     static uint8_t latch_q[MAX_ECG] = {0, 0, 0};
 
@@ -209,13 +209,13 @@ static uint8_t latch_sigmoid(double quality, ecg_sens_id ecg_id)
  * @detail The aim of this function is to provide moving average of quality
  * @retval It returns the moving average of quality signal
  */
-static double softness_filter(double sample, uint8_t ecg_ch, bool restart)
+static float softness_filter(float sample, uint8_t ecg_ch, bool restart)
 {
-    static double  latest_sample[MAX_ECG][SOFTNESS_FILTER_LEN] = {0};
+    static float   latest_sample[MAX_ECG][SOFTNESS_FILTER_LEN] = {0};
     static uint8_t counter[MAX_ECG]                            = {0, 0, 0};
 
-    const double intl_input[SOFTNESS_FILTER_LEN - 1] = {0.91666667, 0.83333333, 0.75, 0.66666667, 0.58333333, 0.5, 0.41666667, 0.33333333, 0.25, 0.16666667, 0.08333333};
-    double avg_out = 0;
+    const float intl_input[SOFTNESS_FILTER_LEN - 1] = {0.916666, 0.833333, 0.75, 0.666666, 0.583333, 0.5, 0.416666, 0.333333, 0.25, 0.166666, 0.083333};
+    float avg_out = 0;
 
     if (restart)
     {
@@ -306,9 +306,9 @@ void abr_update_notch_filter_coeff(bool freq_update)
  */
 float get_preprocess_out(float x, uint8_t ecg_ch, bool restart, garment_id_e gar_id)
 {
-    double filtered_ecg[MAX_ECG]  = {0, 0, 0};
-    double processed_ecg[MAX_ECG] = {0, 0, 0};
-    float  temp_ecg[MAX_ECG]      = {0, 0, 0};
+    float filtered_ecg[MAX_ECG]  = {0, 0, 0};
+    float processed_ecg[MAX_ECG] = {0, 0, 0};
+    float temp_ecg[MAX_ECG]      = {0, 0, 0};
 
     // 1) Reset filter if requested
     if (filter_restart == true)
