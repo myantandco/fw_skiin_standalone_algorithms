@@ -23,14 +23,14 @@
 static float notch_out[KMODEL_INPUT_SIZE][NOTCH_FILTER_SIZE] = {0};
 static float notch_in[KMODEL_INPUT_SIZE][NOTCH_FILTER_SIZE]  = {0};
 
-static float a_notch[] = {1.0l, -1.50977727l, 2.5144414l, -1.4684226l, 0.94597794l};
-static float b_notch[] = {0.9726139l, -1.48909994l, 2.51519154l, -1.48909994l, 0.9726139l};
+static float a_notch[] = {1.0f, -1.5097772f, 2.5144414f, -1.4684226f, 0.9459779f};
+static float b_notch[] = {0.9726139f, -1.4890999f, 2.5151915f, -1.4890999f, 0.9726139f};
 
-static const float a_notch_60hz[] = {1.0l, -1.50977727l, 2.5144414l, -1.4684226l, 0.94597794l};
-static const float b_notch_60hz[] = {0.9726139l, -1.48909994l, 2.51519154l, -1.48909994l, 0.9726139l};
+static const float a_notch_60hz[] = {1.0f, -1.5097772f, 2.5144414f, -1.4684226f, 0.9459779f};
+static const float b_notch_60hz[] = {0.9726139f, -1.4890999f, 2.5151915f, -1.4890999f, 0.9726139f};
 
-static const float a_notch_50hz[] = {1.0l, -2.19185687l, 3.14576208l, -2.1318192l, 0.94597794l};
-static const float b_notch_50hz[] = {0.9726139l, -2.16183804l, 3.14651222l, -2.16183804l, 0.9726139l};
+static const float a_notch_50hz[] = {1.0f, -2.1918568f, 3.1457620f, -2.1318192f, 0.9459779f};
+static const float b_notch_50hz[] = {0.9726139f, -2.1618380f, 3.1465122f, -2.1618380f, 0.9726139f};
 
 typedef struct
 {
@@ -70,11 +70,11 @@ static float abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart)
 {
     float              output[] = {0, 0, 0};
 
-    static const float ah[] = {1.0l, -1.88349555l, 0.88991837l};
-    static const float bh[] = {0.94335348l, -1.88670696l, 0.94335348l};
+    static const float ah[] = {1.0f, -1.8834955f, 0.8899183f};
+    static const float bh[] = {0.9433534f, -1.8867069f, 0.9433534f};
 
-    static const float al[] = {1.0l, -1.09241307l, 0.3910474l};
-    static const float bl[] = {0.07465858l, 0.14931716l, 0.07465858l};
+    static const float al[] = {1.0f, -1.092413f, 0.3910474f};
+    static const float bl[] = {0.0746585f, 0.1493171f, 0.0746585f};
 
     static float       input_ecg[MAX_ECG][FILTER_LEN_ECG];
     static float       output_temp[MAX_ECG][FILTER_LEN_ECG];
@@ -135,11 +135,11 @@ static void abr_quality_slope(float sample, ecg_sens_id ecg_id, float *sample_di
  */
 static void abr_quality_process(float x, float sample, ecg_sens_id ecg_id, uint8_t *latch_out, float *filter_softness, bool *noise_detect, bool restart)
 {
-    static const float ah[] = {1.0l, -0.9902304l};
-    static const float bh[] = {0.9951152l, -0.9951152l};
+    static const float ah[] = {1.0f, -0.9902304f};
+    static const float bh[] = {0.9951152f, -0.9951152f};
 
-    static const float al[] = {1.0l, -0.96148145l};
-    static const float bl[] = {0.01925927l, 0.01925927l};
+    static const float al[] = {1.0f, -0.9614814f};
+    static const float bl[] = {0.0192592f, 0.0192592f};
 
     static float       input_lp[MAX_ECG][FILTER_LEN_QUALITY];
     static float       output_lp[MAX_ECG][FILTER_LEN_QUALITY];
