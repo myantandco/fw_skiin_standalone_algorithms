@@ -341,7 +341,7 @@ float get_preprocess_out(float x, uint8_t ecg_ch, bool restart, garment_id_e gar
                         restart);
 
     // 6) Generate processed ECG output
-    processed_ecg[ecg_ch] = (filtered_ecg[ecg_ch] * quality_info[ecg_ch].latch);
+    processed_ecg[ecg_ch] = (filtered_ecg[ecg_ch] * quality_info[ecg_ch].filter_softness);
     write_csv_single("e3_filtxlatch.csv", processed_ecg[ecg_ch], ecg_ch);
 
     return processed_ecg[ecg_ch];
