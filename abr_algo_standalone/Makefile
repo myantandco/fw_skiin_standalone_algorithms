@@ -1,6 +1,5 @@
-CC = "C:\msys64\ucrt64\bin\gcc.exe"
-CXX = "C:\msys64\ucrt64\bin\g++.exe"
-
+CC = x86_64-w64-mingw32-gcc
+CXX = x86_64-w64-mingw32-g++
 
 SRCS := abr/src/custom_chest.cc
 SRCS += abr/src/custom_waist.cc
