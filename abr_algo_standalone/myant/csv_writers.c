@@ -8,6 +8,8 @@
 #include <windows.h>     // For Windows-specific functions
 
 #define MAX_COLS 3       // maximum number of columns in the CSV file
+#define MAX_PATH_LEN            200    // maximum number of chars in the CSV filepath
+#define MAX_LINE_LEN            1024
 
 int folderExists(const char *folderName)
 {
@@ -41,7 +43,7 @@ void read_csv(const char *filename, float input_ch1[], float input_ch2[], float 
     }
 
     // Declare a buffer to store each line from the file
-    char line[1024];
+    char line[MAX_LINE_LEN];
 
     // Read and parse each line from the CSV file
     *num_rows = 0;
@@ -81,7 +83,7 @@ void read_csv(const char *filename, float input_ch1[], float input_ch2[], float 
 void write_csv_header(const char *filename, const char *var_names)
 {
     createFolderIfNotExists(RES_FOLDER);
-    char filePath[200];    // Adjust the size according to your need
+    char filePath[MAX_PATH_LEN];    // Adjust the size according to your need
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
     {
@@ -101,7 +103,7 @@ void write_csv_header(const char *filename, const char *var_names)
 void write_csv_row(const char *filename, float data[], int num_vars)
 {
     createFolderIfNotExists(RES_FOLDER);
-    char filePath[200];    // Adjust the size according to your need
+    char filePath[MAX_PATH_LEN];    // Adjust the size according to your need
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
     {
@@ -127,7 +129,7 @@ void write_csv_row(const char *filename, float data[], int num_vars)
 void write_csv_single(const char *filename, float data, int ecg_ch)
 {
     createFolderIfNotExists(RES_FOLDER);
-    char filePath[200];    // Adjust the size according to your need
+    char filePath[MAX_PATH_LEN];    // Adjust the size according to your need
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
     {
