@@ -8,9 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define GARMENT_ID_DEFAULT \
-    GARMENT_CHEST_BAND    // Assume underwear, all other garments function the
-                          // same way
+#define GARMENT_ID_DEFAULT           GARMENT_CHEST_BAND    // Assume chestband for now
 #define NOTCH_FILTER_FREQ            false    // False = 60 Hz, True = 50 Hz
 
 #define ECG_ROLLING_DATA_BUFFER_SIZE 3
@@ -22,6 +20,12 @@ static volatile uint32_t sample_count   = 0;
 
 int                      main(int argc, const char *argv[])
 {
+    // Inputs
+    float         dpInputCh1[MAX_ROWS];
+    float         dpInputCh2[MAX_ROWS];
+    float         dpInputCh3[MAX_ROWS];
+    int           bNumRows;
+
     // Flags
     volatile bool ret     = false;    // Return boolean
     volatile bool restart = true;     // Set true for the first time only, then
@@ -32,21 +36,17 @@ int                      main(int argc, const char *argv[])
     float         algo_output[ECG_ALGO_OUTPUT_SIZE]    = {0};
 
     // Outputs
-    uint8_t       rpeak_max   = 0;
-    uint8_t       rpeak_index = 0;
-    uint8_t       q_class     = 0;
-    uint8_t       slope       = 0;
-    float         ble[7];
-    const char   *var_names = "rp_idx,rp_val,q1,q2,q3,slope1,slope2,slope3";
-    write_csv_header("ble.csv", var_names);
+    uint8_t       bRpeakMax   = 0;
+    uint8_t       bRpeakIndex = 0;
+    uint8_t       fQClass     = 0;
+    uint8_t       bSlope      = 0;
+    float         pdBleOuts[7];
+    const char   *pVarNames = "rp_idx,rp_val,q1,q2,q3,slope1,slope2,slope3";
+    csvw_WriteCsvHeader("ble.csv", pVarNames);
 
-    // Inputs - hard-coded for now but in future update to pass by arguments
+    // Read Inputs from CSV
     printf("Setting inputs...\r\n");
-    float input_ch1[MAX_ROWS];
-    float input_ch2[MAX_ROWS];
-    float input_ch3[MAX_ROWS];
-    int   num_rows;
-    read_csv(INPUT_FILE_NAME, input_ch1, input_ch2, input_ch3, &num_rows);
+    csvw_ReadCsv(INPUT_FILE_NAME, dpInputCh1, dpInputCh2, dpInputCh3, &bNumRows);
     ecg_algo_update_garmentid(GARMENT_ID_DEFAULT);
     abr_update_notch_filter_coeff(NOTCH_FILTER_FREQ);
 
@@ -56,16 +56,16 @@ int                      main(int argc, const char *argv[])
 
     // Loop through entire input array
     printf("Looping through input data...\r\n\r\n");
-    for (uint32_t i = 0; i < num_rows; i++)
+    for (uint32_t i = 0; i < bNumRows; i++)
     {
-        // Pass 3 samples on a rolling basis to the local buffer from channel
-        // This assumes data is already converted from raw ADC values to mV but
-        // still has baseline
-        buffer[ECG1] = input_ch1[i] + ABR_INPUT_BASELINE_VALUE;
-        buffer[ECG2] = input_ch2[i] + ABR_INPUT_BASELINE_VALUE;
-        buffer[ECG3] = input_ch3[i] + ABR_INPUT_BASELINE_VALUE;
+        // Pass 3 samples on a rolling basis to the local buffer
+        // This assumes data is already converted from raw ADC
+        // values to mV but still has baseline
+        buffer[ECG1] = dpInputCh1[i] + ABR_INPUT_BASELINE_VALUE;
+        buffer[ECG2] = dpInputCh2[i] + ABR_INPUT_BASELINE_VALUE;
+        buffer[ECG3] = dpInputCh3[i] + ABR_INPUT_BASELINE_VALUE;
 
-        // ECG Algorithm
+        // ECG Algorithm - preprocess and run the model
         ret = ecg_algo_run(buffer, ECG_ROLLING_DATA_BUFFER_SIZE, restart);
         if (ret)
         {
@@ -74,8 +74,12 @@ int                      main(int argc, const char *argv[])
             return -1;
         }
 
+        // Get the algorithm outputs
         ecg_algo_get_output(algo_output, ECG_ALGO_OUTPUT_SIZE);
-        write_csv_single("e4_pred.csv", algo_output[0], 2);
+        csvw_WriteCsvSingle("e4_pred.csv", algo_output[0], 2);
+
+        // Postprocess algo output to rpeak info,
+        // reset at the end of every packet
         abr_pp_rpeak(algo_output[0], ecg_data_count);
 
         // Increment count
@@ -86,31 +90,19 @@ int                      main(int argc, const char *argv[])
 
         if (ecg_data_count >= ECG_DATA_BUFFER_SIZE)
         {
-            abr_pp_get_rpeak(&rpeak_max, &rpeak_index);
-            ble[0] = (float)rpeak_index;
-            ble[1] = (float)rpeak_max;
-            // printf("%d", i);
-            // printf("\r\n");
+            abr_pp_get_rpeak(&bRpeakMax, &bRpeakIndex);
+            pdBleOuts[0] = (float)bRpeakIndex;
+            pdBleOuts[1] = (float)bRpeakMax;
             for (uint8_t j = 0; j < MAX_ECG; j++)
             {
-                abr_prep_get_quality((ecg_sens_id)j, &q_class, &slope);
-                // printf("Sample[%d] ECG Channel %d: rpeak_max = %d rpeak_index
-                // "
-                //        "= %d, q_class = %d, slope = %d...\r\n",
-                //        sample_count,
-                //        j,
-                //        rpeak_max,
-                //        rpeak_index,
-                //        q_class,
-                //        slope);
-                // printf("ch%d: %d, ", j + 1, q_class);
-                ble[2 + j] = (float)q_class;
-                ble[5 + j] = (float)slope;
+                abr_prep_get_quality((ecg_sens_id)j, &fQClass, &bSlope);
+                pdBleOuts[2 + j] = (float)fQClass;
+                pdBleOuts[5 + j] = (float)bSlope;
             }
-            // printf("\r\n");
+
             sample_count++;
             ecg_data_count = 0;
-            write_csv_row("ble.csv", ble, 8);
+            csvw_WriteCsvRow("ble.csv", pdBleOuts, 8);
         }
     }
 

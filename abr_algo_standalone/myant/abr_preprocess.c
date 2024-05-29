@@ -122,7 +122,7 @@ static void abr_quality_slope(float sample, ecg_sens_id ecg_id, float *sample_di
     }
 
     temp_slope[ecg_id] = sample;
-    write_csv_single("lw1_rawslope.csv", max, ecg_id);
+    csvw_WriteCsvSingle("lw1_rawslope.csv", max, ecg_id);
 }
 
 /*
@@ -152,32 +152,32 @@ static void abr_quality_process(float x, float sample, ecg_sens_id ecg_id, uint8
     float              quality_class_temp    = 0;
 
     temp_quality[ecg_id] = digital_filter(x, input_hp[ecg_id], output_hp[ecg_id], ah, bh, 2, 2, FILTER_LEN_QUALITY, restart, 0);
-    write_csv_single("q1_point5filt.csv", temp_quality[ecg_id], ecg_id);
+    csvw_WriteCsvSingle("q1_point5filt.csv", temp_quality[ecg_id], ecg_id);
 
     // calculate abs value
     temp_quality[ecg_id] = temp_quality[ecg_id] - sample;
-    write_csv_single("q2_subtractecg.csv", temp_quality[ecg_id], ecg_id);
+    csvw_WriteCsvSingle("q2_subtractecg.csv", temp_quality[ecg_id], ecg_id);
     temp_quality[ecg_id] = (float)fabs(temp_quality[ecg_id]);
-    write_csv_single("q3_abs.csv", temp_quality[ecg_id], ecg_id);
+    csvw_WriteCsvSingle("q3_abs.csv", temp_quality[ecg_id], ecg_id);
 
     // lowpass 2Hz
     quality[ecg_id] = digital_filter(temp_quality[ecg_id], input_lp[ecg_id], output_lp[ecg_id], al, bl, 2, 2, FILTER_LEN_QUALITY, restart, 0);
-    write_csv_single("q4_lp2hz.csv", quality[ecg_id], ecg_id);
+    csvw_WriteCsvSingle("q4_lp2hz.csv", quality[ecg_id], ecg_id);
 
     // Latch
     *latch_out = 1 - latch_sigmoid(quality[ecg_id], ecg_id);
-    write_csv_single("q5_oneminuslatch.csv", *latch_out, ecg_id);
+    csvw_WriteCsvSingle("q5_oneminuslatch.csv", *latch_out, ecg_id);
 
     *filter_softness = softness_filter(*latch_out, ecg_id, restart);
-    write_csv_single("q6_filtersoft.csv", *filter_softness, ecg_id);
+    csvw_WriteCsvSingle("q6_filtersoft.csv", *filter_softness, ecg_id);
 
     quality_class_temp = 1 - *filter_softness;
-    write_csv_single("q7_qclass.csv", quality_class_temp, ecg_id);
+    csvw_WriteCsvSingle("q7_qclass.csv", quality_class_temp, ecg_id);
     if ((int)quality_class_temp != 0)
     {
         *noise_detect = true;
     }
-    write_csv_single("q8_noisedetect.csv", (int)*noise_detect, ecg_id);
+    csvw_WriteCsvSingle("q8_noisedetect.csv", (int)*noise_detect, ecg_id);
 }
 
 /*
@@ -320,11 +320,11 @@ float get_preprocess_out(float x, uint8_t ecg_ch, bool restart, garment_id_e gar
 
     // 2) Apply digital filter
     temp_ecg[ecg_ch] = digital_filter(x, notch_in[ecg_ch], notch_out[ecg_ch], a_notch, b_notch, NOTCH_FILTER_COEFF_LEN_A, NOTCH_FILTER_COEFF_LEN_B, NOTCH_FILTER_SIZE, restart, 0);
-    write_csv_single("e1_notch.csv", temp_ecg[ecg_ch], ecg_ch);
+    csvw_WriteCsvSingle("e1_notch.csv", temp_ecg[ecg_ch], ecg_ch);
 
     // 3) Apply bandpass filter
     filtered_ecg[ecg_ch] = abr_ecg_process(temp_ecg[ecg_ch], (ecg_sens_id)ecg_ch, restart);
-    write_csv_single("e2_bp.csv", filtered_ecg[ecg_ch], ecg_ch);
+    csvw_WriteCsvSingle("e2_bp.csv", filtered_ecg[ecg_ch], ecg_ch);
 
     // 4) Calculate quality slope and normalize
     abr_quality_slope(
@@ -342,7 +342,7 @@ float get_preprocess_out(float x, uint8_t ecg_ch, bool restart, garment_id_e gar
 
     // 6) Generate processed ECG output
     processed_ecg[ecg_ch] = (filtered_ecg[ecg_ch] * quality_info[ecg_ch].filter_softness);
-    write_csv_single("e3_filtxlatch.csv", processed_ecg[ecg_ch], ecg_ch);
+    csvw_WriteCsvSingle("e3_filtxlatch.csv", processed_ecg[ecg_ch], ecg_ch);
 
     return processed_ecg[ecg_ch];
 }
