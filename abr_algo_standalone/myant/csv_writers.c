@@ -83,7 +83,7 @@ void csvw_ReadCsv(const char *filename, float input_ch1[], float input_ch2[], fl
 
 void csvw_WriteCsvHeader(const char *filename, const char *var_names)
 {
-    createFolderIfNotExists(RES_FOLDER);
+    csvw_CreateFolderIfNotExists(RES_FOLDER);
     char filePath[MAX_PATH_LEN];    // Adjust the size according to your need
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
@@ -103,7 +103,7 @@ void csvw_WriteCsvHeader(const char *filename, const char *var_names)
 
 void csvw_WriteCsvRow(const char *filename, float data[], int num_vars)
 {
-    createFolderIfNotExists(RES_FOLDER);
+    csvw_CreateFolderIfNotExists(RES_FOLDER);
     char filePath[MAX_PATH_LEN];    // Adjust the size according to your need
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
@@ -129,7 +129,7 @@ void csvw_WriteCsvRow(const char *filename, float data[], int num_vars)
 
 void csvw_WriteCsvSingle(const char *filename, float data, int ecg_ch)
 {
-    createFolderIfNotExists(RES_FOLDER);
+    csvw_CreateFolderIfNotExists(RES_FOLDER);
     char filePath[MAX_PATH_LEN];    // Adjust the size according to your need
     snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
     if (BOOL_OUTPUT_CSV)
