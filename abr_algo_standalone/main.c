@@ -1,4 +1,3 @@
-#include "config.h"
 #include "myant/abr_postprocess.h"
 #include "myant/abr_preprocess.h"
 #include "myant/csv_writers.h"

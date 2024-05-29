@@ -1,7 +1,6 @@
 #ifndef CSV_WRITERS_H_
 #define CSV_WRITERS_H_
 
-#include "config.h"
 #include "csv_writers.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -9,6 +8,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>    // For mkdir()
+
+#define RES_FOLDER      "example_data/354"
+#define INPUT_FILE_NAME "example_data/354_TIT01C-ID06-T2.csv"
+#define MAX_ROWS        96000    // maximum number of rows in the CSV file
+#define BOOL_OUTPUT_CSV 1
 
 // Function prototypes
 void createFolderIfNotExists(const char *folderName);

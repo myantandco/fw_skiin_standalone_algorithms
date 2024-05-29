@@ -33,7 +33,7 @@ BUILDDIR = ../build
 # library to be generated
 MAIN_BIN = abr_algorithm_standalone.exe
 
-$(BUILDDIR)/$(MAIN_BIN) : $(SRCS) config.h
+$(BUILDDIR)/$(MAIN_BIN) : $(SRCS)
 	$(CXX) $(CXXFLAGS) -o $@ $(SRCS) $(LDFLAGS)
 
 all: $(MAIN_BIN)
