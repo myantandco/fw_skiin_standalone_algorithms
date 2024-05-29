@@ -43,4 +43,4 @@ info:
 	echo $(TARGET_TOOLCHAIN_PREFIX)
 
 clean:
-	rm -f $(MAIN_BIN)
+	rm -f $(BUILDDIR)/$(MAIN_BIN)
