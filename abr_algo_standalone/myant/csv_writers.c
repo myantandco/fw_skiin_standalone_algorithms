@@ -1,165 +1,185 @@
 #include "csv_writers.h"
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>    // For mkdir()
-#include <windows.h>     // For Windows-specific functions
+#include <sys/stat.h>       // For mkdir()
+#include <windows.h>        // For Windows-specific functions
 
-#define MAX_COLS 3       // maximum number of columns in the CSV file
-#define MAX_PATH_LEN            200    // maximum number of chars in the CSV filepath
-#define MAX_LINE_LEN            1024
+#define MAX_COLS     3      // maximum number of columns in the CSV file
+#define MAX_PATH_LEN 200    // maximum number of chars in the CSV filepath
+#define MAX_LINE_LEN 1024
 
-int csvw_FolderExists(const char *folderName)
+static int csvw_FolderExists(const char *pFolderName)
 {
-    DWORD dwAttrib = GetFileAttributes(folderName);
+    DWORD dwAttrib = GetFileAttributes(pFolderName);
     return (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-void csvw_CreateFolderIfNotExists(const char *folderName)
+static int csvw_CreateFolderIfNotExists(const char *pFolderName)
 {
-    if (!folderExists(folderName))
-    if (!csvw_FolderExists(folderName))
+    int ret;
+    if (!csvw_FolderExists(pFolderName))
     {
-        if (CreateDirectory(folderName, NULL))
+        if (CreateDirectory(pFolderName, NULL))
         {
-            printf("Folder created successfully: %s\n", folderName);
+            printf("Folder created successfully: %s\n", pFolderName);
         }
         else
         {
-            printf("Error creating folder: %s\n", folderName);
+            printf("Error creating folder: %s\n", pFolderName);
+            return -errno;
         }
     }
+    return 0;
 }
 
-void csvw_ReadCsv(const char *filename, float input_ch1[], float input_ch2[], float input_ch3[], int *num_rows)
+int csvw_ReadCsv(const char *pFilename, float pdInputCh1[], float pdInputCh2[], float pdInputCh3[], int *bNumRows)
 {
     // Open the CSV file for reading
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
+    FILE *pFile = fopen(pFilename, "r");
+    if (pFile == NULL)
     {
         fprintf(stderr, "Error opening file.\n");
-        return;
+        return -errno;
     }
 
     // Declare a buffer to store each line from the file
-    char line[MAX_LINE_LEN];
+    char pLine[MAX_LINE_LEN];
 
     // Read and parse each line from the CSV file
-    *num_rows = 0;
-    while (fgets(line, sizeof(line), file) != NULL && *num_rows < MAX_ROWS)
+    *bNumRows = 0;
+    while (fgets(pLine, sizeof(pLine), pFile) != NULL)
     {
+        if (*bNumRows >= MAX_ROWS)
+        {
+            fprintf(stderr, "Error: Maximum number of rows exceeded\n");
+            fclose(pFile);
+            errno = EOVERFLOW;    // Value too large for defined data type
+            return -errno;
+        }
+
         // Tokenize the line using strtok
-        char *token = strtok(line, ",");
-        int   col   = 0;
-        while (token != NULL && col < MAX_COLS)
+        char *pToken = strtok(pLine, ",");
+        int   col    = 0;
+        while (pToken != NULL && col < MAX_COLS)
         {
             // Convert token to float and store in the appropriate array
             {
                 switch (col)
                 {
                     case 0:
-                        input_ch1[*num_rows] = (float)atof(token);
+                        pdInputCh1[*bNumRows] = (float)atof(pToken);
                         break;
                     case 1:
-                        input_ch2[*num_rows] = (float)atof(token);
+                        pdInputCh2[*bNumRows] = (float)atof(pToken);
                         break;
                     case 2:
-                        input_ch3[*num_rows] = (float)atof(token);
+                        pdInputCh3[*bNumRows] = (float)atof(pToken);
                         break;
                 }
             }
             // Move to the next token
-            token = strtok(NULL, ",");
+            pToken = strtok(NULL, ",");
             col++;
         }
-        (*num_rows)++;
+        (*bNumRows)++;
     }
 
     // Close the CSV file
-    fclose(file);
+    if (fclose(pFile) != 0)
+    {
+        perror("Error closing file");
+        return -errno;
+    }
+
+    return 0;
 }
 
-void csvw_WriteCsvHeader(const char *filename, const char *var_names)
+int csvw_WriteCsvHeader(const char *pFileName, const char *pVarNames)
 {
     csvw_CreateFolderIfNotExists(RES_FOLDER);
-    char filePath[MAX_PATH_LEN];    // Adjust the size according to your need
-    snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
+    char pFilePath[MAX_PATH_LEN];    // Adjust the size according to your need
+    snprintf(pFilePath, sizeof(pFilePath), "%s/%s", RES_FOLDER, pFileName);
     if (BOOL_OUTPUT_CSV)
     {
-        FILE *file = fopen(filePath, "w");
+        FILE *file = fopen(pFilePath, "w");
         if (file == NULL)
         {
-            fprintf(stderr, "Error opening file: %s\n", filename);
-            return;
+            fprintf(stderr, "Error opening file: %s\n", pFileName);
+            return -errno;
         }
 
         // Write the header row with variable names
-        fprintf(file, "%s\n", var_names);
+        fprintf(file, "%s\n", pVarNames);
         fclose(file);
     }
+    return 0;
 }
 
-void csvw_WriteCsvRow(const char *filename, float data[], int num_vars)
+int csvw_WriteCsvRow(const char *pFilename, float pdData[], int bNumVars)
 {
     csvw_CreateFolderIfNotExists(RES_FOLDER);
     char filePath[MAX_PATH_LEN];    // Adjust the size according to your need
-    snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
+    snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, pFilename);
     if (BOOL_OUTPUT_CSV)
     {
         FILE *file = fopen(filePath, "a");
         if (file == NULL)
         {
-            fprintf(stderr, "Error opening file: %s\n", filename);
-            return;
+            fprintf(stderr, "Error opening file: %s\n", pFilename);
+            return -errno;
         }
 
         // Write the data row
-        fprintf(file, "%.2f", data[0]);
-        for (int i = 1; i < num_vars; i++)
+        fprintf(file, "%.2f", pdData[0]);
+        for (int i = 1; i < bNumVars; i++)
         {
-            fprintf(file, ",%.2f", data[i]);
+            fprintf(file, ",%.2f", pdData[i]);
         }
         fprintf(file, "\n");
 
         fclose(file);
     }
+    return 0;
 }
 
-void csvw_WriteCsvSingle(const char *filename, float data, int ecg_ch)
+int csvw_WriteCsvSingle(const char *pFileName, float dData, int bEcgCh)
 {
     csvw_CreateFolderIfNotExists(RES_FOLDER);
     char filePath[MAX_PATH_LEN];    // Adjust the size according to your need
-    snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, filename);
+    snprintf(filePath, sizeof(filePath), "%s/%s", RES_FOLDER, pFileName);
     if (BOOL_OUTPUT_CSV)
     {
         FILE *file = fopen(filePath, "a");
         if (file == NULL)
         {
-            fprintf(stderr, "Error opening file: %s\n", filename);
-            return;
+            fprintf(stderr, "Error opening file: %s\n", pFileName);
+            return -errno;
         }
 
         // Write the data row
-        if (ecg_ch == 2)
+        if (bEcgCh == 2)
         {
-            fprintf(file, "%.7f", data);
+            fprintf(file, "%.7f", dData);
             fprintf(file, "\n");
         }
         else
         {
-            fprintf(file, "%.7f,", data);
+            fprintf(file, "%.7f,", dData);
         }
 
         fclose(file);
     }
+    return 0;
 }
 
-void csvw_PrintVar(float var, int ecg_id)
+void csvw_PrintVar(float dVar, int bEcgCh)
 {
-    printf("%f, ", var);
-    if (ecg_id == 2)
+    printf("%f, ", dVar);
+    if (bEcgCh == 2)
     {
         printf("\r\n");
     }

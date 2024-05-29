@@ -14,16 +14,14 @@
 #define BOOL_OUTPUT_CSV 1
 
 // Function prototypes
-void csvw_CreateFolderIfNotExists(const char *folderName);
+int csvw_ReadCsv(const char *pFilename, float pdInputCh1[], float pdInputCh2[], float pdInputCh3[], int *bNumRows);
 
-void csvw_ReadCsv(const char *filename, float input_ch1[], float input_ch2[], float input_ch3[], int *num_rows);
+int  csvw_WriteCsvHeader(const char *pFileName, const char *pVarNames);
 
-void csvw_WriteCsvHeader(const char *filename, const char *var_names);
+int  csvw_WriteCsvRow(const char *pFilename, float pdData[], int bNumVars);
 
-void csvw_WriteCsvRow(const char *filename, float data[], int num_vars);
+int  csvw_WriteCsvSingle(const char *pFileName, float dData, int bEcgCh);
 
-void csvw_WriteCsvSingle(const char *filename, float data, int ecg_ch);
-
-void csvw_PrintVar(float var, int ecg_id);
+void csvw_PrintVar(float dVar, int bEcgCh);
 
 #endif
