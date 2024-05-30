@@ -6,10 +6,11 @@
 #include <string.h>
 
 // ABR Post processing definition flags
-#define ABR_RPEAK_THRESHOLD_MIN  -1.7f    // needs to change based on garment
+#define ABR_RPEAK_THRESHOLD_MIN  -1.7f    // changes based on garment (see ALDD)
 #define ABR_RPEAK_PREDICTION_MAX 3.0f
-#define ABR_RPEAK_RANGE          4.7f     // needs to change based on garment
-#define ABR_RPEAK_RESOLUTION     31.0f    // needs to change based on garment
+#define ABR_RPEAK_RANGE          4.7f     // changes based on garment
+// range = pred_max (fixed) - threshold_min (changes per garment)
+#define ABR_RPEAK_RESOLUTION     31.0f
 
 // structure definitions
 typedef struct
