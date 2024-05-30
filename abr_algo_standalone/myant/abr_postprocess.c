@@ -5,12 +5,11 @@
 #include <stdio.h>
 #include <string.h>
 
-
 // ABR Post processing definition flags
-#define ABR_RPEAK_THRESHOLD_MIN  -1.8f
+#define ABR_RPEAK_THRESHOLD_MIN  -1.7f    // needs to change based on garment
 #define ABR_RPEAK_PREDICTION_MAX 3.0f
-#define ABR_RPEAK_RANGE          4.8f
-#define ABR_RPEAK_RESOLUTION     31.0f
+#define ABR_RPEAK_RANGE          4.7f     // needs to change based on garment
+#define ABR_RPEAK_RESOLUTION     31.0f    // needs to change based on garment
 
 // structure definitions
 typedef struct
