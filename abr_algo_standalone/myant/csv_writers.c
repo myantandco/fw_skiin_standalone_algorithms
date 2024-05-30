@@ -1,12 +1,13 @@
 #include "csv_writers.h"
 #include <errno.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <fileapi.h>    // for CreateDirectoryA, GetFileAttributesA, CreateD...
+#include <minwindef.h>    // for DWORD, FILE_ATTRIBUTE_DIRECTORY
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>       // For mkdir()
-#include <windows.h>        // For Windows-specific functions
+
+// #include <sys/stat.h>       // For mkdir()
+// #include <windows.h>        // For Windows-specific functions
 
 #define MAX_COLS     3      // maximum number of columns in the CSV file
 #define MAX_PATH_LEN 200    // maximum number of chars in the CSV filepath
@@ -55,7 +56,7 @@ int csvw_ReadCsv(const char *pFilename, float pdInputCh1[], float pdInputCh2[], 
     {
         if (*bNumRows >= MAX_ROWS)
         {
-            fprintf(stderr, "Error: Maximum number of rows exceeded\n");
+            fprintf(stderr, "Warning: Maximum number of rows exceeded in ReadCsv. Closing file.\n");
             fclose(pFile);
             errno = EOVERFLOW;    // Value too large for defined data type
             return -errno;

@@ -2,15 +2,12 @@
 #define CSV_WRITERS_H_
 
 #include "csv_writers.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>    // For mkdir()
-
-#define RES_FOLDER      "example_data/354"
-#define INPUT_FILE_NAME "example_data/354_TIT01C-ID06-T2.csv"
-#define MAX_ROWS        96000    // maximum number of rows in the CSV file
+#include <errno.h>      // for EOVERFLOW
+#include <fileapi.h>    // for CreateDirectoryA, GetFileAttributesA, CreateD...
+#include <minwindef.h>    // for DWORD, FILE_ATTRIBUTE_DIRECTORY
+#include <stdio.h>        // for fprintf, fclose, NULL, fopen, printf, snprintf
+#include <stdlib.h>       // for errno, atof
+#include <string.h>       // for strtok
 #define BOOL_OUTPUT_CSV 1
 
 // Function prototypes
