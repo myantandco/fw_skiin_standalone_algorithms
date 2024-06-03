@@ -5,60 +5,47 @@
 #include "custom_waist.h"
 #include "model.h"
 
-//Low pass definitions
-#define LP_FILTER_SIZE                  2
-#define LP_FILTER_COEFF_LEN_A           2
-#define LP_FILTER_COEFF_LEN_B           1
-
 //Global variables definition
-constexpr int kModelInputSize = 3;   // Number of model input values
-constexpr int kOutputSize = ECG_ALGO_OUTPUT_SIZE; // Number of model output values
-constexpr int kStateInputSize = 18;  // Total number of model states
+constexpr int kModelInputSize = ECG_ALGO_INPUT_SIZE;       // Number of model input values
+constexpr int kOutputSize     = ECG_ALGO_OUTPUT_SIZE;      // Number of model output values
+constexpr int kStateInputSize = ECG_ALGO_STATE_INPUT_SIZE; // Total number of model states
 
-static bool initialized = false;
-static float states[kStateInputSize] = {0};
-const unsigned char *model_buffer = g_model_waist;
-static garment_id_e gar_id = GARMENT_UNDERWEAR;
+static bool fInitDone = false;
+static float pdStates[kStateInputSize] = {0};
+const unsigned char *pModelBuffer = g_model_waist;
+static garment_id_e nGarmentID = GARMENT_UNDERWEAR;
 
-static void preprocess_inputs(float *input, float *processed, bool restart)
+void ECGAlgo_SetGarmentID(garment_id_e nID)
 {
-    float x = 0;
-
-    if((input == NULL) || (processed == NULL))
+    // 1) Check arguements
+    if (nID >= MAX_GARMENTS)
     {
         return;
     }
 
-    for (uint8_t ecg_ch = 0; ecg_ch < kModelInputSize; ecg_ch++)
+    // 2) Set model
+    if (nID == GARMENT_UNDERWEAR)
     {
-        x = input[ecg_ch];
-
-        // preprocessor: `subtract_baseline`
-        x -= ABR_INPUT_BASELINE_VALUE;
-
-        // preprocessor:
-        x = get_preprocess_out(x,ecg_ch,restart, gar_id);
-
-        processed[ecg_ch] = (float)x;
+        pModelBuffer = g_model_waist;
     }
-}
-
-void ecg_algo_update_garmentid(garment_id_e id)
-{
-    if((id>=MAX_GARMENTS))
+    else
     {
-        return;
+        pModelBuffer = g_model_chest;
     }
 
-    model_buffer = (id == GARMENT_UNDERWEAR) ? g_model_waist : g_model_chest;
-    gar_id = id;
+    // 3) Store garment ID
+    nGarmentID = nID;
+
+    return;
 }
 
-void ecg_algo_init(void)
+void ECGAlgo_Init(void)
 {
-    memset(states,0,kStateInputSize);
+    // 1) Clear pdStates 
+    memset(pdStates, 0, kStateInputSize);
 
-    if(gar_id  == GARMENT_UNDERWEAR)
+    // 2) Based on garment type, set-up the appropriate model
+    if (nGarmentID  == GARMENT_UNDERWEAR)
     {
         custom_waist_setup(kModelInputSize, kStateInputSize, kOutputSize);
     }
@@ -67,79 +54,99 @@ void ecg_algo_init(void)
         custom_chest_setup(kModelInputSize, kStateInputSize, kOutputSize);
     }
 
-    initialized = true;
+    // 3) Mark as initialized
+    fInitDone = true;
+
+    return;
 }
 
-bool ecg_algo_run(float *data, uint8_t ch_count, bool restart)
+bool ECGAlgo_Run(float *pdData, uint8_t bChannelCount, bool fRestart)
 {
-    int ret = -1;
-    float inp[kModelInputSize] = {0};
-    float preproc_inp[kModelInputSize] = {0};
+    int ret = 0;
+    float pdInput[kModelInputSize] = {0};
+    float pdPreprocessorInput[kModelInputSize] = {0};
+    float dTemp = 0;
 
-    if (!initialized)
+    // 1) Check arguments
+    if (bChannelCount != kModelInputSize)
     {
         return false;
     }
 
-    if (ch_count != kModelInputSize)
+    // 2) Check if intialized
+    if (!fInitDone)
     {
         return false;
     }
 
-    if(restart)
+    // 3) If fRestart was set, clear pdStates
+    if (fRestart)
     {
-        memset(states,0,kStateInputSize);
+        memset(pdStates, 0, kStateInputSize);
     }
 
-    inp[0] = data[0];
-    inp[1] = data[1];
-    inp[2] = data[2];
+    // 4) Extract data for pre-processing
+    pdInput[0] = pdData[0];
+    pdInput[1] = pdData[1];
+    pdInput[2] = pdData[2];
 
-    //preprocess inputs
-    preprocess_inputs(inp, preproc_inp, restart);
-
-    if(gar_id  == GARMENT_UNDERWEAR)
+    // 5) Pre-process inputs
+    for (uint8_t ecg_ch = 0; ecg_ch < kModelInputSize; ecg_ch++)
     {
-        custom_waist_set_inputs(preproc_inp);
-        custom_waist_set_states(states);
+        dTemp = pdInput[ecg_ch];
+
+        // subtract_baseline
+        dTemp -= ABR_INPUT_BASELINE_VALUE;
+
+        // preprocessor:
+        dTemp = ABRPreProcess_GetOutput(dTemp, ecg_ch, fRestart, nGarmentID);
+
+        pdPreprocessorInput[ecg_ch] = (float)dTemp;
+    }
+
+
+    // 6) Set inputs, pdStates based on garment type selected
+    if(nGarmentID  == GARMENT_UNDERWEAR)
+    {
+        custom_waist_set_inputs(pdPreprocessorInput);
+        custom_waist_set_states(pdStates);
         ret = custom_waist_inference();
-
     } 
     else
     {
-        //chest
-        custom_chest_set_inputs(preproc_inp);
-        custom_chest_set_states(states);
+        custom_chest_set_inputs(pdPreprocessorInput);
+        custom_chest_set_states(pdStates);
         ret = custom_chest_inference();
     }
 
     return (ret==1);
 }
 
-void ecg_algo_get_output(float *outputs, uint8_t len)
+void ECGAlgo_GetOutput(float *pdOutputs, uint8_t bLength)
 {
-    if ((len < kOutputSize) || (outputs == NULL))
+    // 1) Check arguments
+    if ((bLength < kOutputSize) || (pdOutputs == NULL))
     {
         return;
     }
 
-    if (!initialized)
+    // 2) Check if initialized
+    if (!fInitDone)
     {
         return;
     }
 
-    // Get post inference states and outputs
-    if (gar_id  == GARMENT_UNDERWEAR)
+    // 3) Get post inference pdStates and outputs
+    if (nGarmentID  == GARMENT_UNDERWEAR)
     {
-
-        custom_waist_get_states(states);
-        custom_waist_get_outputs(outputs);
-
+        custom_waist_get_states(pdStates);
+        custom_waist_get_outputs(pdOutputs);
     }
     else
     {
-
-        custom_chest_get_states(states);
-        custom_chest_get_outputs(outputs);
+        custom_chest_get_states(pdStates);
+        custom_chest_get_outputs(pdOutputs);
     }
+
+    return;
 }

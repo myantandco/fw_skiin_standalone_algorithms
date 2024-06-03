@@ -1,4 +1,3 @@
-
 #ifndef ABR_RPEAK_MODEL_HPP_
 #define ABR_RPEAK_MODEL_HPP_
 
@@ -7,20 +6,21 @@ extern "C"
 {
 #endif
 
-#include "abr_preprocess.h"
-#include "data_processing.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#define ECG_ALGO_OUTPUT_SIZE     1
+#define ECG_ALGO_OUTPUT_SIZE      1
+#define ECG_ALGO_INPUT_SIZE		  3
+#define ECG_ALGO_STATE_INPUT_SIZE 18
+
 // ABR model definitions
 #define ABR_INPUT_BASELINE_VALUE 685.7142857f
 
-    void ecg_algo_update_garmentid(garment_id_e id);
-    void ecg_algo_init(void);
-    bool ecg_algo_run(float *data, uint8_t ch_count, bool restart);
-    void ecg_algo_get_output(float *outputs, uint8_t len);
+void ECGAlgo_SetGarmentID(garment_id_e nID);
+void ECGAlgo_Init(void);
+bool ECGAlgo_Run(float *pdData, uint8_t bChannelCount, bool fRestart);
+void ECGAlgo_GetOutput(float *pdOutputs, uint8_t bLength);
 
 #ifdef __cplusplus
 }

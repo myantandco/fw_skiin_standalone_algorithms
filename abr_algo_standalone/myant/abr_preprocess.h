@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 // XXX - Added below for standalone application only
 typedef enum
 {
@@ -36,8 +35,8 @@ typedef enum
     MAX_QUALITY,
 } quality_class_e;
 
-float get_preprocess_out(float x, uint8_t ecg_ch, bool restart, garment_id_e gar_id);
-void abr_prep_get_quality(ecg_sens_id ecg_id, uint8_t *q_class, uint8_t *slope);
-void abr_update_notch_filter_coeff(bool freq_update);
+float ABRPreProcess_GetOutput(float x, uint8_t ecg_ch, bool restart, garment_id_e gar_id);
+void ABRPreProcess_GetQuality(ecg_sens_id ecg_id, uint8_t *q_class, uint8_t *slope);
+void ABRPreProcess_SetNotchFilterCoeffient(bool freq_update);
 
 #endif /* ABR_PREPROCESS_H_ */

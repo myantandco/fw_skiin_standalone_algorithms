@@ -4,57 +4,58 @@
 #include <stdint.h>
 #include <string.h>
 
-float digital_filter(float input, float *in, float *out, const float *a, const float *b, uint8_t a_len, uint8_t b_len, uint8_t filter_order, bool reset, float initial_sample)
+float digital_filter(float dInput, float *pIn, float *pOut, const float *pA, const float *pB, uint8_t aLength, uint8_t bLength, uint8_t bFilterOrder, bool fReset, float dInitialSample)
 {
-    if ((a == NULL) || (b == NULL) || (in == NULL) || (out == NULL))
+    float output = 0.0f;
+    float tmp    = 0.0f;
+
+    // 1) Check arguments - pointers
+    if ((pA == NULL) || (pB == NULL) || (pIn == NULL) || (pOut == NULL))
     {
         return 0;
     }
 
-    if ((!filter_order) || (!a_len) || (!b_len))
+    // 2) Check arguments - lengths
+    if ((bFilterOrder == 0) || (aLength == 0) || (bLength == 0) || (aLength > bFilterOrder) || (bLength > bFilterOrder))
     {
         return 0;
     }
 
-    if ((a_len > filter_order) || (b_len > filter_order))
+    // 3) If fReset was set, modify input data
+    if (fReset)
     {
-        return 0;
-    }
-
-    float output = 0.0;
-    float tmp    = 0.0;
-
-    if (reset)
-    {
-        output = 0;
-        for (uint8_t i = 0; i < filter_order; i++)
+        for (uint8_t i = 0; i < bFilterOrder; i++)
         {
-            in[i]  = initial_sample;
-            out[i] = 0;
+            pIn[i]  = dInitialSample;   // Initialize input buffer with initial sample
+            pOut[i] = 0;                // Initialize output buffer with zero
         }
     }
+    pIn[bFilterOrder - 1] = dInput;     // Place new input sample at the end of input buffer
 
-    in[filter_order - 1] = input;
-
-    for (uint8_t i = 0; i < b_len; i++)
+    // 4) Apply the feedforward coefficients to the input samples 
+    for (uint8_t i = 0; i < bLength; i++)
     {
-        tmp += b[i] * in[filter_order - 1 - i];
+        tmp += pB[i] * pIn[bFilterOrder - 1 - i];
     }
 
-    for (uint8_t i = 1; i < a_len; i++)
+    // 5) Apply the feedback coefficients to the output samples
+    for (uint8_t i = 1; i < aLength; i++)
     {
-        tmp -= a[i] * out[filter_order - 1 - i];
+        tmp -= pA[i] * pOut[bFilterOrder - 1 - i];
     }
 
-    tmp                   /= a[0];
-    output                 = tmp;
-    out[filter_order - 1]  = output;
+    // 6) Normalize by the first feedback coefficient 
+    tmp /= pA[0];
+    output = tmp;
+    pOut[bFilterOrder - 1]  = output;
 
-    for (uint8_t i = 1; i < filter_order; i++)
+    // 7) Shift input and output buffers to make room for the next sample
+    for (uint8_t i = 1; i < bFilterOrder; i++)
     {
-        in[i - 1]  = in[i];
-        out[i - 1] = out[i];
+        pIn[i - 1]  = pIn[i];
+        pOut[i - 1] = pOut[i];
     }
 
+    // 8) Return the filtered output sample
     return output;
 }

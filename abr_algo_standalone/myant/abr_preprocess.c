@@ -34,12 +34,12 @@ static const float b_notch_50hz[] = {0.9726139f, -2.1618380f, 3.1465122f, -2.161
 
 typedef struct
 {
-        uint8_t         slope;
-        float           max_diff;
-        quality_class_e q_class;
-        bool            noise_detect;
-        uint8_t         latch;
-        float           filter_softness;
+    uint8_t         slope;
+    float           max_diff;
+    quality_class_e q_class;
+    bool            noise_detect;
+    uint8_t         latch;
+    float           filter_softness;
 } quality_t;
 
 typedef enum
@@ -53,22 +53,21 @@ static notch_fq  notch_cnf_fq_flag     = FQ_60HZ;
 static quality_t quality_info[MAX_ECG] = {0};
 static bool      filter_restart        = false;
 
-static float   abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart);
+static float abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart);
 static uint8_t latch_sigmoid(float sample, ecg_sens_id ecg_id);
-static float   softness_filter(float sample, uint8_t ecg_ch, bool restart);
+static float softness_filter(float sample, uint8_t ecg_ch, bool restart);
 static void abr_quality_slope(float sample, ecg_sens_id ecg_id, float *sample_diff, bool restart);
 static void abr_quality_process(float x, float sample, ecg_sens_id ecg_id, uint8_t *latch_out, float *filter_softness, bool *noise_detect, bool restart);
 
 /*
  * @brief  This function applies lowpass and high pass to the ecg signal.
  * @param  sample - sample data from channel 1,2 or 3 depending upon the ecg id
- * @param  ecg_id - Channel id is used to keep track of the input data and
- * output data.
+ * @param  ecg_id - Channel id is used to keep track of the input data and output data.
  * @retval It returns filtered value to get_preprocess_out function.
  */
 static float abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart)
 {
-    float              output[] = {0, 0, 0};
+    float output[] = {0, 0, 0};
 
     static const float ah[] = {1.0f, -1.8834955f, 0.8899183f};
     static const float bh[] = {0.9433534f, -1.8867069f, 0.9433534f};
@@ -76,14 +75,13 @@ static float abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart)
     static const float al[] = {1.0f, -1.092413f, 0.3910474f};
     static const float bl[] = {0.0746585f, 0.1493171f, 0.0746585f};
 
-    static float       input_ecg[MAX_ECG][FILTER_LEN_ECG];
-    static float       output_temp[MAX_ECG][FILTER_LEN_ECG];
+    static float input_ecg[MAX_ECG][FILTER_LEN_ECG];
+    static float output_temp[MAX_ECG][FILTER_LEN_ECG];
 
-    static float       input_temp[MAX_ECG][FILTER_LEN_ECG];
-    static float       output_ecg[MAX_ECG][FILTER_LEN_ECG];
+    static float input_temp[MAX_ECG][FILTER_LEN_ECG];
+    static float output_ecg[MAX_ECG][FILTER_LEN_ECG];
 
     output[ecg_id] = digital_filter((float)sample, input_ecg[ecg_id], output_temp[ecg_id], al, bl, 3, 3, FILTER_LEN_ECG, restart, 0);
-
     output[ecg_id] = digital_filter(output[ecg_id], input_temp[ecg_id], output_ecg[ecg_id], ah, bh, 3, 3, FILTER_LEN_ECG, restart, 0);
 
     return output[ecg_id];
@@ -92,10 +90,8 @@ static float abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart)
 /*
  * @brief  This function find the slope of ecg sample.
  * @param  sample - sample data from channel 1,2 or 3 depending upon the ecg id
- * @param  ecg_id - Channel id is used to keep track of the input data and
- * output data.
- * @param  *sample_diff- is a pointer used to store the max_diff between 2 ecg
- * sample
+ * @param  ecg_id - Channel id is used to keep track of the input data and output data.
+ * @param  sample_diff- is a pointer used to store the max_diff between 2 ecg sample
  * @retval Update the maximum diff between 2 ecg samples.
  */
 static void abr_quality_slope(float sample, ecg_sens_id ecg_id, float *sample_diff, bool restart)
@@ -122,15 +118,13 @@ static void abr_quality_slope(float sample, ecg_sens_id ecg_id, float *sample_di
     }
 
     temp_slope[ecg_id] = sample;
-    csvw_WriteCsvSingle("lw1_rawslope.csv", max, ecg_id);
 }
 
 /*
  * @brief  This function applies lowpass and high pass to the quality signal,
  *         detect the noise in the signal and find filter_softness.
  * @param  sample - sample data from channel 1,2 or 3 depending upon the ecg id
- * @param  ecg_id - Channel id is used to keep track of the input data and
- * output data.
+ * @param  ecg_id - Channel id is used to keep track of the input data and output data.
  * @retval Updates, noise_detection flag, latch_out and filter_softness.
  */
 static void abr_quality_process(float x, float sample, ecg_sens_id ecg_id, uint8_t *latch_out, float *filter_softness, bool *noise_detect, bool restart)
@@ -152,39 +146,32 @@ static void abr_quality_process(float x, float sample, ecg_sens_id ecg_id, uint8
     float              quality_class_temp    = 0;
 
     temp_quality[ecg_id] = digital_filter(x, input_hp[ecg_id], output_hp[ecg_id], ah, bh, 2, 2, FILTER_LEN_QUALITY, restart, 0);
-    csvw_WriteCsvSingle("q1_point5filt.csv", temp_quality[ecg_id], ecg_id);
 
     // calculate abs value
     temp_quality[ecg_id] = temp_quality[ecg_id] - sample;
-    csvw_WriteCsvSingle("q2_subtractecg.csv", temp_quality[ecg_id], ecg_id);
     temp_quality[ecg_id] = (float)fabs(temp_quality[ecg_id]);
-    csvw_WriteCsvSingle("q3_abs.csv", temp_quality[ecg_id], ecg_id);
 
     // lowpass 2Hz
     quality[ecg_id] = digital_filter(temp_quality[ecg_id], input_lp[ecg_id], output_lp[ecg_id], al, bl, 2, 2, FILTER_LEN_QUALITY, restart, 0);
-    csvw_WriteCsvSingle("q4_lp2hz.csv", quality[ecg_id], ecg_id);
-
+    
     // Latch
     *latch_out = 1 - latch_sigmoid(quality[ecg_id], ecg_id);
-    csvw_WriteCsvSingle("q5_oneminuslatch.csv", *latch_out, ecg_id);
 
+    // Softness filter
     *filter_softness = softness_filter(*latch_out, ecg_id, restart);
-    csvw_WriteCsvSingle("q6_filtersoft.csv", *filter_softness, ecg_id);
 
     quality_class_temp = 1 - *filter_softness;
-    csvw_WriteCsvSingle("q7_qclass.csv", quality_class_temp, ecg_id);
     if ((int)quality_class_temp != 0)
     {
         *noise_detect = true;
     }
-    csvw_WriteCsvSingle("q8_noisedetect.csv", (int)*noise_detect, ecg_id);
 }
 
 /*
  * @brief  This function uses filtered quality signal to produce latch output
  * @param  quality - quality data
- * @detail The filter quality value is checked with the upper and lower
- * threshold values. Depending upon the filter quality the latch is updated.
+ * @detail The filter quality value is checked with the upper and lower threshold values. 
+ *         Depending upon the filter quality the latch is updated.
  * @retval It returns the latch
  */
 static uint8_t latch_sigmoid(float quality, ecg_sens_id ecg_id)
@@ -214,7 +201,7 @@ static float softness_filter(float sample, uint8_t ecg_ch, bool restart)
     static float   latest_sample[MAX_ECG][SOFTNESS_FILTER_LEN] = {0};
     static uint8_t counter[MAX_ECG]                            = {0, 0, 0};
 
-    const float intl_input[SOFTNESS_FILTER_LEN - 1] = {0.916666, 0.833333, 0.75, 0.666666, 0.583333, 0.5, 0.416666, 0.333333, 0.25, 0.166666, 0.083333};
+    const float intl_input[SOFTNESS_FILTER_LEN - 1] = {0.916666f, 0.833333f, 0.75f, 0.666666f, 0.583333f, 0.5f, 0.416666f, 0.333333f, 0.25f, 0.166666f, 0.083333f};
     float avg_out = 0;
 
     if (restart)
@@ -240,6 +227,7 @@ static float softness_filter(float sample, uint8_t ecg_ch, bool restart)
     {
         latest_sample[ecg_ch][j - 1] = latest_sample[ecg_ch][j];
     }
+
     return avg_out;
 }
 
@@ -249,7 +237,7 @@ static float softness_filter(float sample, uint8_t ecg_ch, bool restart)
  * @detail It retrieves the data from the quality_t struct.
  * @retval It updates the pointer passed from the sens_ecg.c
  */
-void abr_prep_get_quality(ecg_sens_id ecg_id, uint8_t *q_class, uint8_t *slope)
+void ABRPreProcess_GetQuality(ecg_sens_id ecg_id, uint8_t *q_class, uint8_t *slope)
 {
     if (quality_info[ecg_id].noise_detect == true)
     {
@@ -263,9 +251,9 @@ void abr_prep_get_quality(ecg_sens_id ecg_id, uint8_t *q_class, uint8_t *slope)
     *q_class = quality_info[ecg_id].q_class - 1;
     *slope   = (uint8_t)quality_info[ecg_id].slope;
 
-    quality_info[ecg_id].slope        = 0.0l;
+    quality_info[ecg_id].slope        = 0.0f;
     quality_info[ecg_id].noise_detect = false;
-    quality_info[ecg_id].max_diff     = 0.0l;
+    quality_info[ecg_id].max_diff     = 0.0f;
 }
 
 /*
@@ -274,7 +262,7 @@ void abr_prep_get_quality(ecg_sens_id ecg_id, uint8_t *q_class, uint8_t *slope)
  * @detail The aim of this function is to update the feq of notch filter
  * @retval no return type
  */
-void abr_update_notch_filter_coeff(bool freq_update)
+void ABRPreProcess_SetNotchFilterCoeffient(bool freq_update)
 {
     filter_restart = true;
 
@@ -295,16 +283,15 @@ void abr_update_notch_filter_coeff(bool freq_update)
 /*
  * @brief  This function takes ecg data in mV and provides the quality of the
  *         signal and prepocess the ecg values for the ABR2.0 model. This
- * function also provides with the quality of the ecg signal.
+ *         function also provides with the quality of the ecg signal.
  * @param  x - Our implementation has 3 ecg channels. Here x is a mV output of
  *         ECG channel_1,ECG channel_2 and ECG channel_3.
- * @param  ech_ch - Channel id is used to keep track of the input data and
- * output data.
+ * @param  ech_ch - Channel id is used to keep track of the input data and output data.
  * @detail Pre-processing mainly contains filter to remove noise from the signal
  *         and provide with latch, quality and slope of the signal.
  * @retval it returns processed ecg which is feed to ABR2.0 model.
  */
-float get_preprocess_out(float x, uint8_t ecg_ch, bool restart, garment_id_e gar_id)
+float ABRPreProcess_GetOutput(float x, uint8_t ecg_ch, bool restart, garment_id_e gar_id)
 {
     float filtered_ecg[MAX_ECG]  = {0, 0, 0};
     float processed_ecg[MAX_ECG] = {0, 0, 0};
@@ -320,15 +307,12 @@ float get_preprocess_out(float x, uint8_t ecg_ch, bool restart, garment_id_e gar
 
     // 2) Apply digital filter
     temp_ecg[ecg_ch] = digital_filter(x, notch_in[ecg_ch], notch_out[ecg_ch], a_notch, b_notch, NOTCH_FILTER_COEFF_LEN_A, NOTCH_FILTER_COEFF_LEN_B, NOTCH_FILTER_SIZE, restart, 0);
-    csvw_WriteCsvSingle("e1_notch.csv", temp_ecg[ecg_ch], ecg_ch);
-
+    
     // 3) Apply bandpass filter
     filtered_ecg[ecg_ch] = abr_ecg_process(temp_ecg[ecg_ch], (ecg_sens_id)ecg_ch, restart);
-    csvw_WriteCsvSingle("e2_bp.csv", filtered_ecg[ecg_ch], ecg_ch);
 
     // 4) Calculate quality slope and normalize
-    abr_quality_slope(
-        filtered_ecg[ecg_ch], (ecg_sens_id)ecg_ch, &quality_info[ecg_ch].max_diff, restart);
+    abr_quality_slope(filtered_ecg[ecg_ch], (ecg_sens_id)ecg_ch, &quality_info[ecg_ch].max_diff, restart);
     quality_info[ecg_ch].slope = (uint8_t)((quality_info[ecg_ch].max_diff / 5) * 200);
 
     // 5) Process Quality
@@ -342,8 +326,7 @@ float get_preprocess_out(float x, uint8_t ecg_ch, bool restart, garment_id_e gar
 
     // 6) Generate processed ECG output
     processed_ecg[ecg_ch] = (filtered_ecg[ecg_ch] * quality_info[ecg_ch].filter_softness);
-    csvw_WriteCsvSingle("e3_filtxlatch.csv", processed_ecg[ecg_ch], ecg_ch);
-
+    
     return processed_ecg[ecg_ch];
 }
 

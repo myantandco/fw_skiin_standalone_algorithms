@@ -6,6 +6,6 @@
 #include <stdint.h>
 #include <string.h>
 
-float digital_filter(float input, float *in, float *out, const float *a, const float *b, uint8_t a_len, uint8_t b_len, uint8_t filter_order, bool reset, float initial_sample);
+float digital_filter(float dInput, float *pIn, float *pOut, const float *pA, const float *pB, uint8_t aLength, uint8_t bLength, uint8_t bFilterOrder, bool fReset, float dInitialSample);
 
 #endif /* DATA_PROCESSING_H_ */

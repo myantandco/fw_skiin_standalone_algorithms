@@ -8,22 +8,21 @@
 // ABR Post processing definition flags
 #define ABR_RPEAK_THRESHOLD_MIN  -1.7f    // changes based on garment (see ALDD)
 #define ABR_RPEAK_PREDICTION_MAX 3.0f
-#define ABR_RPEAK_RANGE          4.7f     // changes based on garment
-// range = pred_max (fixed) - threshold_min (changes per garment)
 #define ABR_RPEAK_RESOLUTION     31.0f
+#define ABR_RPEAK_RANGE          4.7f     // changes based on garment, range = pred_max (fixed) - threshold_min (changes per garment)
 
-// structure definitions
+// Structure definitions
 typedef struct
 {
-        float   max_value;
-        uint8_t normalized;
-        uint8_t max_index;
+    float   max_value;
+    uint8_t normalized;
+    uint8_t max_index;
 } rpeak_pp_t;
 
 // Global variables definition
 static rpeak_pp_t rpeak = {0};
 
-void              abr_pp_rpeak(float rpeak_output, uint8_t count)
+void ABRPostProcess_RPeak(float rpeak_output, uint8_t count)
 {
     // 1. check arguments
     //  XXX - commented for standalone application
@@ -32,12 +31,13 @@ void              abr_pp_rpeak(float rpeak_output, uint8_t count)
     //      return;
     //  }
 
+    // 2) Cap rpeak_output to ABR_RPEAK_PREDICTION_MAX to ensure it stays within expected range 
     if (rpeak_output > ABR_RPEAK_PREDICTION_MAX)
     {
         rpeak_output = ABR_RPEAK_PREDICTION_MAX;
     }
 
-    // 2. if reset flag is true, clear max_rpeak and rpeak_index to 0.
+    // 3) Reset rpeak values if count is zero (indicates a reset condition)
     if (!count)
     {
         rpeak.max_value  = ABR_RPEAK_THRESHOLD_MIN;
@@ -45,30 +45,30 @@ void              abr_pp_rpeak(float rpeak_output, uint8_t count)
         rpeak.max_index  = 0;
     }
 
-    // 3. if rpeak is less than threshold return.
+    // 4) Ignore rpeak values below the minimum threshold
     if (rpeak_output < ABR_RPEAK_THRESHOLD_MIN)
     {
         return;
     }
 
-    // 4. compare rpeak value with previous max_value
-    // and update max_value if it is higher.
-    // also set max index to count,
+    // 5) Update the maximum rpeak value and corresponding max index
+    //    if the current rpeak_output is greater than the stored max_value
     if (rpeak.max_value < rpeak_output)
     {
         rpeak.max_value = rpeak_output;
-        rpeak.max_index = count + 1;    // offset to get index from 1 to 24
+        rpeak.max_index = count + 1;    // Offset to get index from 1 to 24
     }
 }
 
-void abr_pp_get_rpeak(uint8_t *rpeak_max, uint8_t *rpeak_index)
+void ABRPostProcess_GetRPeak(uint8_t *rpeak_max, uint8_t *rpeak_index)
 {
-    // 1. check arguments
-    if (rpeak.max_value > ABR_RPEAK_PREDICTION_MAX)
+    // 1) Check arguments
+    if (rpeak.max_value > ABR_RPEAK_PREDICTION_MAX || !rpeak_max || !rpeak_index)
     {
         return;
     }
 
+    // 2) If max_index is NULL, return 0
     if (!rpeak.max_index)
     {
         *rpeak_max   = 0;
@@ -76,16 +76,16 @@ void abr_pp_get_rpeak(uint8_t *rpeak_max, uint8_t *rpeak_index)
         return;
     }
 
-    // 2. normalize rpeak value to 5 bits
+    // 3) Normalize rpeak value to 5 bits
     rpeak.normalized = ((uint8_t)((floor)(((rpeak.max_value - ABR_RPEAK_THRESHOLD_MIN) / ABR_RPEAK_RANGE) * ABR_RPEAK_RESOLUTION))) + 1;
 
-    // 3. copy normalized value to rpeak_max value for 5 bit resolution
+    // 4) copy normalized value to rpeak_max value for 5 bit resolution
     if (rpeak.normalized > 31)
     {
         return;
     }
     *rpeak_max = rpeak.normalized;
 
-    // 4. copy max_index to rpeak_index.
+    // 5) Copy max_index to rpeak_index.
     *rpeak_index = rpeak.max_index;
 }
