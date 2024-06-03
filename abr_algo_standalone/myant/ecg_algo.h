@@ -11,7 +11,7 @@ extern "C"
 #include <stdint.h>
 
 #define ECG_ALGO_OUTPUT_SIZE      1
-#define ECG_ALGO_INPUT_SIZE		  3
+#define ECG_ALGO_INPUT_SIZE       3
 #define ECG_ALGO_STATE_INPUT_SIZE 18
 
 // ABR model definitions

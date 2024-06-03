@@ -9,8 +9,8 @@ SRCS += abr/src/model.cpp
 SRCS += myant/data_processing.c
 SRCS += myant/abr_postprocess.c
 SRCS += myant/abr_preprocess.c
-SRCS += myant/csv_writers.c
 SRCS += myant/ecg_algo.cpp
+SRCS += csv_writers.c
 SRCS += main.c
 
 CMSIS_SRCS := abr/cmsis/CMSIS/NN/Source/BasicMathFunctions/arm_elementwise_add_s8.c

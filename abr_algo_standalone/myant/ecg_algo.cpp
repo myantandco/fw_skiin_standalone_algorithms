@@ -1,5 +1,6 @@
 #include <string.h>
 #include "abr_preprocess.h"
+#include "abr_postprocess.h"
 #include "ecg_algo.h"
 #include "custom_chest.h"
 #include "custom_waist.h"
@@ -35,6 +36,9 @@ void ECGAlgo_SetGarmentID(garment_id_e nID)
 
     // 3) Store garment ID
     nGarmentID = nID;
+
+    // 4) Update rpeak threshold + range in post processor
+    ABRPostProcess_SetRPeak(nID);
 
     return;
 }

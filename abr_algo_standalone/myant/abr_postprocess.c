@@ -6,10 +6,10 @@
 #include <string.h>
 
 // ABR Post processing definition flags
-#define ABR_RPEAK_THRESHOLD_MIN  -1.7f    // changes based on garment (see ALDD)
-#define ABR_RPEAK_PREDICTION_MAX 3.0f
-#define ABR_RPEAK_RESOLUTION     31.0f
-#define ABR_RPEAK_RANGE          4.7f     // changes based on garment, range = pred_max (fixed) - threshold_min (changes per garment)
+#define ABR_RPEAK_THRESHOLD_MIN_CHEST   -1.7f   // Chest threshold (see ALDD)
+#define ABR_RPEAK_THRESHOLD_MIN_UDW     -1.8f   // Underwear threshold (see ALDD)
+#define ABR_RPEAK_PREDICTION_MAX        3.0f
+#define ABR_RPEAK_RESOLUTION            31.0f
 
 // Structure definitions
 typedef struct
@@ -21,6 +21,8 @@ typedef struct
 
 // Global variables definition
 static rpeak_pp_t rpeak = {0};
+static float rpeak_range = 0.0f;
+static float rpeak_threshold_min = 0.0f;
 
 void ABRPostProcess_RPeak(float rpeak_output, uint8_t count)
 {
@@ -40,13 +42,13 @@ void ABRPostProcess_RPeak(float rpeak_output, uint8_t count)
     // 3) Reset rpeak values if count is zero (indicates a reset condition)
     if (!count)
     {
-        rpeak.max_value  = ABR_RPEAK_THRESHOLD_MIN;
+        rpeak.max_value  = rpeak_threshold_min;
         rpeak.normalized = 0;
         rpeak.max_index  = 0;
     }
 
     // 4) Ignore rpeak values below the minimum threshold
-    if (rpeak_output < ABR_RPEAK_THRESHOLD_MIN)
+    if (rpeak_output < rpeak_threshold_min)
     {
         return;
     }
@@ -77,7 +79,7 @@ void ABRPostProcess_GetRPeak(uint8_t *rpeak_max, uint8_t *rpeak_index)
     }
 
     // 3) Normalize rpeak value to 5 bits
-    rpeak.normalized = ((uint8_t)((floor)(((rpeak.max_value - ABR_RPEAK_THRESHOLD_MIN) / ABR_RPEAK_RANGE) * ABR_RPEAK_RESOLUTION))) + 1;
+    rpeak.normalized = ((uint8_t)((floor)(((rpeak.max_value - rpeak_threshold_min) / rpeak_range) * ABR_RPEAK_RESOLUTION))) + 1;
 
     // 4) copy normalized value to rpeak_max value for 5 bit resolution
     if (rpeak.normalized > 31)
@@ -88,4 +90,20 @@ void ABRPostProcess_GetRPeak(uint8_t *rpeak_max, uint8_t *rpeak_index)
 
     // 5) Copy max_index to rpeak_index.
     *rpeak_index = rpeak.max_index;
+}
+
+void ABRPostProcess_SetRPeak(garment_id_e nID)
+{
+    if (nID == GARMENT_UNDERWEAR)
+    {
+        rpeak_threshold_min = ABR_RPEAK_THRESHOLD_MIN_UDW;
+    }
+    else
+    {
+        rpeak_threshold_min = ABR_RPEAK_THRESHOLD_MIN_CHEST;
+    }
+
+    rpeak_range = ABR_RPEAK_PREDICTION_MAX - rpeak_threshold_min;
+
+    return;
 }
