@@ -1,13 +1,15 @@
 #ifndef ABR_POSTPROCESS_H_
 #define ABR_POSTPROCESS_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <string.h>
+#include "abr_preprocess.h" // XXX - Included for garment type
 
-//Functions declarations
-void abr_pp_rpeak(float rpeak, uint8_t count);
-void abr_pp_get_rpeak(uint8_t *rpeak_max, uint8_t *rpeak_index);
+// Functions declarations
+void ABRPostProcess_RPeak(float rpeak, uint8_t count);
+void ABRPostProcess_GetRPeak(uint8_t *rpeak_max, uint8_t *rpeak_index);
+void ABRPostProcess_SetRPeak(garment_id_e nID);
 
 #endif /* ABR_POSTPROCESS_H_ */

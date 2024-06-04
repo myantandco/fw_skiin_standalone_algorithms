@@ -1,13 +1,11 @@
 #ifndef DATA_PROCESSING_H_
 #define DATA_PROCESSING_H_
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
-double digital_filter(double input, double *in, double *out,
-        const double *a, const double *b, uint8_t a_len, uint8_t b_len,
-        uint8_t filter_order, bool reset, double initial_sample);
+float digital_filter(float dInput, float *pIn, float *pOut, const float *pA, const float *pB, uint8_t aLength, uint8_t bLength, uint8_t bFilterOrder, bool fReset, float dInitialSample);
 
 #endif /* DATA_PROCESSING_H_ */
