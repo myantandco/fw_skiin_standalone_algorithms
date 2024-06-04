@@ -9,7 +9,7 @@
 #define ABR_RPEAK_THRESHOLD_MIN_CHEST   -1.7f   // Chest threshold (see ALDD)
 #define ABR_RPEAK_THRESHOLD_MIN_UDW     -1.8f   // Underwear threshold (see ALDD)
 #define ABR_RPEAK_PREDICTION_MAX        3.0f
-#define ABR_RPEAK_RESOLUTION            31.0f
+#define ABR_RPEAK_RESOLUTION          30.0f    // 31 bits, 0 is no rpeak, so 30 bits
 
 // Structure definitions
 typedef struct
