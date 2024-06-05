@@ -60,9 +60,10 @@ static notch_fq  notch_cnf_fq_flag     = FQ_60HZ;
 static quality_t quality_info[MAX_ECG] = {0};
 static bool      filter_restart        = false;
 
-static float abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart);
 static float     dLatchLimitLow  = 0.0f;
 static float     dLatchLimitHigh = 0.0f;
+
+static float   abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart);
 static uint8_t latch_sigmoid(float sample, ecg_sens_id ecg_id);
 static float softness_filter(float sample, uint8_t ecg_ch, bool restart);
 static void abr_quality_slope(float sample, ecg_sens_id ecg_id, float *sample_diff, bool restart);
