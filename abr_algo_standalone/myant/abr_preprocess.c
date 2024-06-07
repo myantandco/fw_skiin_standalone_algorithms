@@ -12,6 +12,13 @@
 #define FILTER_LEN_ECG           3
 #define SOFTNESS_FILTER_LEN      12
 
+// Latch defitions
+#define LATCH_LIMIT_LOW_CHEST    0.15f    // Chest low limit (see ALDD)
+#define LATCH_LIMIT_HIGH_CHEST   1.2f     // Chest high limit (see ALDD)
+
+#define LATCH_LIMIT_LOW_UDW      0.15f    // UDW low limit (see ALDD)
+#define LATCH_LIMIT_HIGH_UDW     0.3f     // UDW high limit (see ALDD)
+
 // Notch filter definitions
 #define NOTCH_FILTER_SIZE        5
 #define NOTCH_FILTER_COEFF_LEN_A 5
@@ -53,7 +60,10 @@ static notch_fq  notch_cnf_fq_flag     = FQ_60HZ;
 static quality_t quality_info[MAX_ECG] = {0};
 static bool      filter_restart        = false;
 
-static float abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart);
+static float     dLatchLimitLow  = 0.0f;
+static float     dLatchLimitHigh = 0.0f;
+
+static float   abr_ecg_process(float sample, ecg_sens_id ecg_id, bool restart);
 static uint8_t latch_sigmoid(float sample, ecg_sens_id ecg_id);
 static float softness_filter(float sample, uint8_t ecg_ch, bool restart);
 static void abr_quality_slope(float sample, ecg_sens_id ecg_id, float *sample_diff, bool restart);
@@ -178,11 +188,11 @@ static uint8_t latch_sigmoid(float quality, ecg_sens_id ecg_id)
 {
     static uint8_t latch_q[MAX_ECG] = {0, 0, 0};
 
-    if (quality > 1.2)
+    if (quality > dLatchLimitHigh)
     {
         latch_q[ecg_id] = 1;
     }
-    else if (quality < 0.15)
+    else if (quality < dLatchLimitLow)
     {
         latch_q[ecg_id] = 0;
     }
@@ -330,3 +340,26 @@ float ABRPreProcess_GetOutput(float x, uint8_t ecg_ch, bool restart, garment_id_
     return processed_ecg[ecg_ch];
 }
 
+/*
+ * @brief  This function is used update quality latch limits accessed by
+ * latch_sigmoid.
+ * @param  nID - the garment ID, represents which garment is used
+ * @detail The aim of this function is to update the latch limits for quality
+ * based on garment type.
+ * @retval no return type
+ */
+void ABRPreProcess_SetLatchLimits(garment_id_e nID)
+{
+    if (nID == GARMENT_UNDERWEAR)
+    {
+        dLatchLimitLow  = LATCH_LIMIT_LOW_UDW;
+        dLatchLimitHigh = LATCH_LIMIT_HIGH_UDW;
+    }
+    else
+    {
+        dLatchLimitLow  = LATCH_LIMIT_LOW_CHEST;
+        dLatchLimitHigh = LATCH_LIMIT_HIGH_CHEST;
+    }
+
+    return;
+}

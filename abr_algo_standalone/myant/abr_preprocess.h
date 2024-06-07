@@ -38,5 +38,6 @@ typedef enum
 float ABRPreProcess_GetOutput(float x, uint8_t ecg_ch, bool restart, garment_id_e gar_id);
 void ABRPreProcess_GetQuality(ecg_sens_id ecg_id, uint8_t *q_class, uint8_t *slope);
 void ABRPreProcess_SetNotchFilterCoeffient(bool freq_update);
+void ABRPreProcess_SetLatchLimits(garment_id_e nID);
 
 #endif /* ABR_PREPROCESS_H_ */

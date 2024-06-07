@@ -40,6 +40,9 @@ void ECGAlgo_SetGarmentID(garment_id_e nID)
     // 4) Update rpeak threshold + range in post processor
     ABRPostProcess_SetRPeak(nID);
 
+    // 5) Update Quality Latch Limits in abr_preprocess.c
+    ABRPreProcess_SetLatchLimits(nID);
+
     return;
 }
 
