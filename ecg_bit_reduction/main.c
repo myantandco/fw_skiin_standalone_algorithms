@@ -34,6 +34,9 @@ int main(int argc, const char *argv[])
 
         // Write algorithm output to CSV 
         CSVW_WriteCSVSingle("out.csv", ecg_reduced_data, ECG1);
+
+        // Only refresh on the first iteration of the loop
+        ecg_buffer_refresh = false;
     }
 
     printf("Data set complete, exiting...\r\n");
