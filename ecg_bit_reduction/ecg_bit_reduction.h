@@ -15,7 +15,7 @@ typedef enum
     MAX_ECG,
 } ecg_sens_id;
 
-int16_t ecgbr_sample_reduction(uint32_t sample, ecg_sens_id ecg_id, bool restart);
+int16_t ECGBitReduction_SampleReduction(uint32_t bSample, ecg_sens_id nECGId, bool fRestart);
 
 
 #endif /* SRC_ALGORITHMS_ECG_BIT_REDUCTION_H_ */

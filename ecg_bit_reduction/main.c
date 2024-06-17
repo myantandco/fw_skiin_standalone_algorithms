@@ -14,8 +14,8 @@ int main(int argc, const char *argv[])
     int   bNumRows          = 0;
 
     // Intermediate data
-    bool ecg_buffer_refresh = true;
-    uint16_t ecg_reduced_data = 0;
+    bool fECGBufferRefresh = true;
+    uint16_t bECGReducedData = 0;
 
     // Write CSV header - TODO: Gloria
     const char *pVarNames = "output";
@@ -30,13 +30,13 @@ int main(int argc, const char *argv[])
     for (uint32_t i = 0; i < bNumRows; i++)
     {
         // ECG Bit Reduction Algorithm
-        ecg_reduced_data = ecgbr_sample_reduction((uint32_t)dpInput[i], ECG1, ecg_buffer_refresh);
+        bECGReducedData = ECGBitReduction_SampleReduction((uint32_t)dpInput[i], ECG1, fECGBufferRefresh);
 
         // Write algorithm output to CSV 
-        CSVW_WriteCSVSingle("out.csv", ecg_reduced_data, ECG1);
+        CSVW_WriteCSVSingle("out.csv", bECGReducedData, ECG1);
 
         // Only refresh on the first iteration of the loop
-        ecg_buffer_refresh = false;
+        fECGBufferRefresh = false;
     }
 
     printf("Data set complete, exiting...\r\n");
