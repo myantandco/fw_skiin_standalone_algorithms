@@ -1,10 +1,11 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
 #include "ecg_bit_reduction.h"
+#include "csv_writers.h"
 #include "data_processing.h"
+#include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // --- Defines and macros ---
 
@@ -37,9 +38,9 @@
 
 // --- Globals ---
 
-static const double gflHighpassCoeffiecientsA[] = {1.0l,                 -1.9991669594972l,  0.9991673063310l};
-static const double gflHighpassCoeffiecientsB[] = {0.99958356645707l,    -1.99916713291414l, 0.99958356645705l};
-static double gflHighpassInput[MAX_ECG][HP_FILTER_SIZE] = {0};
+static const double gflHighpassCoeffiecientsA[] = {1.f, -1.999167f, 0.9991673f};
+static const double gflHighpassCoeffiecientsB[] = {0.9995835f, -1.999167f, 0.9995835f};
+static double gflHighpassInput[MAX_ECG][HP_FILTER_SIZE]  = {0};
 static double gflHighpassOutput[MAX_ECG][HP_FILTER_SIZE] = {0};
 
 static double gflMeanValue[MAX_ECG] = {0};
@@ -140,6 +141,8 @@ static double ECGBitReduction_MSBRemoval(uint32_t bSample, ecg_sens_id nECGId, b
     flProcessedMSB = ecgbr_digital_filter((double)bSample, gflHighpassInput[nECGId], gflHighpassOutput[nECGId], gflHighpassCoeffiecientsA, gflHighpassCoeffiecientsB, 
         HP_FILTER_COEFF_LEN_A, HP_FILTER_COEFF_LEN_B, HP_FILTER_SIZE, gfResetFlagECG[nECGId], (double)bSample);
     
+    CSVW_WriteCSVSingle("3_filter_inp.csv", (float)bSample, 2);
+    CSVW_WriteCSVSingle("1_filter.csv", flProcessedMSB, 2);
     // Reset flt flag
     gfResetFlagECG[nECGId] = false;
     
