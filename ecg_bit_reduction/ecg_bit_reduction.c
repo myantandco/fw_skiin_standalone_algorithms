@@ -38,10 +38,10 @@
 
 // --- Globals ---
 
-static const double gflHighpassCoeffiecientsA[] = {1.f, -1.999167f, 0.9991673f};
-static const double gflHighpassCoeffiecientsB[] = {0.9995835f, -1.999167f, 0.9995835f};
-static double gflHighpassInput[MAX_ECG][HP_FILTER_SIZE]  = {0};
-static double gflHighpassOutput[MAX_ECG][HP_FILTER_SIZE] = {0};
+static const float gflHighpassCoeffiecientsA[] = {1.f, -1.999167f, 0.9991673f};
+static const float gflHighpassCoeffiecientsB[] = {0.9995835f, -1.999167f, 0.9995835f};
+static float gflHighpassInput[MAX_ECG][HP_FILTER_SIZE]  = {0};
+static float gflHighpassOutput[MAX_ECG][HP_FILTER_SIZE] = {0};
 
 static double gflMeanValue[MAX_ECG] = {0};
 static uint32_t gbPreviousECG[MAX_ECG] = {0};
@@ -137,12 +137,10 @@ static double ECGBitReduction_MSBRemoval(uint32_t bSample, ecg_sens_id nECGId, b
     // Check_restart
     gfResetFlagECG[nECGId] = ECGBitReduction_CheckRestartFilter(bSample, nECGId, fRestart);
 
-    // Filter data - XXX remove ecgbr_digital_filter() and replace with standard float-based digital_filter function
-    flProcessedMSB = ecgbr_digital_filter((double)bSample, gflHighpassInput[nECGId], gflHighpassOutput[nECGId], gflHighpassCoeffiecientsA, gflHighpassCoeffiecientsB, 
-        HP_FILTER_COEFF_LEN_A, HP_FILTER_COEFF_LEN_B, HP_FILTER_SIZE, gfResetFlagECG[nECGId], (double)bSample);
-    
-    CSVW_WriteCSVSingle("3_filter_inp.csv", (float)bSample, 2);
-    CSVW_WriteCSVSingle("1_filter.csv", flProcessedMSB, 2);
+    // Filter data
+    flProcessedMSB = digital_filter((float)bSample, gflHighpassInput[nECGId], gflHighpassOutput[nECGId], gflHighpassCoeffiecientsA, gflHighpassCoeffiecientsB, HP_FILTER_COEFF_LEN_A, HP_FILTER_COEFF_LEN_B, HP_FILTER_SIZE, gfResetFlagECG[nECGId], (float)bSample);
+    CSVW_WriteCSVSingle("1_filter_float.csv", flProcessedMSB, 2);
+
     // Reset flt flag
     gfResetFlagECG[nECGId] = false;
     
