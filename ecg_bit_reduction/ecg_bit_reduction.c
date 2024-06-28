@@ -1,54 +1,54 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
 #include "ecg_bit_reduction.h"
 #include "data_processing.h"
+#include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // --- Defines and macros ---
 
 // Bit reduction algorithm definitions
-#define BR_THRESHOLD_AMP_SETTLING       100
-#define BR_THRESHOLD_MEAN_DIFF          233333          // 20mv
-#define BR_THRESHOLD_SUCCESSIVE_DIFF    11666           // 1mv
-#define BR_MEAN_SAMPLE_COUNT_RES        0.0009765625l   // 1/1024
-#define BR_SAMPLE_WINDOW                80              // SAMPLES
-#define BR_MSB_TO_REMOVE                5
-#define BR_LSB_TO_REMOVE                7
+#define BR_THRESHOLD_AMP_DIFF_TO_RESET 100              // 0.01mV
+#define BR_THRESHOLD_MEAN_DIFF         233333           // 20mv
+#define BR_THRESHOLD_SUCCESSIVE_DIFF   11666            // 1mv
+#define BR_MEAN_SAMPLE_COUNT_RES       0.0009765625f    // 1/1024
+#define BR_MAX_SETTLING_TIME_SAMPLES   80               // SAMPLES
+#define BR_MAX_SAMPLES_SINCE_LAST_HIGH 90               // Samples
+#define BR_MSB_TO_REMOVE               5
+#define BR_LSB_TO_REMOVE               7
 
-/* 
+/*
  * MSB_THRSHOLD Formula   (12800000/2)/(2^MSB_TO_REMOVE)
  * 6400000/32
  * 20000 bit reduced threshold
  */
-#define BR_MSB_THRSHOLD                 200000
+#define BR_MSB_THRSHOLD                200000
 
-/* 
+/*
  * LSB_FACTOR   (2^LSB_TO_REMOVE)
  * 2^7 = 128
  */
-#define BR_LSB_FACTOR                   128.0l
+#define BR_LSB_FACTOR                  128.0f
 
 // High Pass Filter definitions
-#define HP_FILTER_SIZE                  3
-#define HP_FILTER_COEFF_LEN_A           3
-#define HP_FILTER_COEFF_LEN_B           3
+#define HP_FILTER_SIZE                 3
+#define HP_FILTER_COEFF_LEN_A          3
+#define HP_FILTER_COEFF_LEN_B          3
 
 // --- Globals ---
 
-static const double gflHighpassCoeffiecientsA[] = {1.0l,                 -1.9991669594972l,  0.9991673063310l};
-static const double gflHighpassCoeffiecientsB[] = {0.99958356645707l,    -1.99916713291414l, 0.99958356645705l};
-static double gflHighpassInput[MAX_ECG][HP_FILTER_SIZE] = {0};
-static double gflHighpassOutput[MAX_ECG][HP_FILTER_SIZE] = {0};
+static const float gflHighpassCoeffiecientsA[] = {1.f, -1.999167f, 0.9991673f};
+static const float gflHighpassCoeffiecientsB[] = {0.9995835f, -1.999167f, 0.9995835f};
+static float gflHighpassInput[MAX_ECG][HP_FILTER_SIZE]  = {0};
+static float gflHighpassOutput[MAX_ECG][HP_FILTER_SIZE] = {0};
 
-static double gflMeanValue[MAX_ECG] = {0};
-static uint32_t gbPreviousECG[MAX_ECG] = {0};
-static bool gfLastHighAmplitudeFlag[MAX_ECG] = {0};
-static uint8_t gbSampleCount[MAX_ECG] = {0};
+static float    gflMeanValue[MAX_ECG]           = {0};
+static uint32_t gbPreviousECG[MAX_ECG]          = {0};
+static bool     gfHighAmpActivatedFlag[MAX_ECG] = {0};
+static uint8_t  gbSamplesSinceLastHigh[MAX_ECG] = {0};
 
 static bool gfResetFlagECG[MAX_ECG] = {false, false, false};
-
 
 // --- Functions ---
 
@@ -64,19 +64,19 @@ static bool ECGBitReduction_CheckRestartFilter(uint32_t bRawSample, ecg_sens_id 
 
     if (fRestart)
     {
-        gflMeanValue[nECGId] = (double)bRawSample;
-        gbPreviousECG[nECGId] = bRawSample;
-        gfLastHighAmplitudeFlag[nECGId] = 0;
-        gbSampleCount[nECGId] = 0;
+        gflMeanValue[nECGId]           = (float)bRawSample;
+        gbPreviousECG[nECGId]          = bRawSample;
+        gfHighAmpActivatedFlag[nECGId] = 0;
+        gbSamplesSinceLastHigh[nECGId] = 0;
         return true;
     }
 
     // Calculate mean
-    gflMeanValue[nECGId] =  ((1.0 - BR_MEAN_SAMPLE_COUNT_RES) * gflMeanValue[nECGId] + (BR_MEAN_SAMPLE_COUNT_RES) * (double)bRawSample);
+    gflMeanValue[nECGId] = ((1.0 - BR_MEAN_SAMPLE_COUNT_RES) * gflMeanValue[nECGId] + (BR_MEAN_SAMPLE_COUNT_RES) * (float)bRawSample);
 
     // Calculate difference of successive samples
-    bSuccesiveDifference = bRawSample - gbPreviousECG[nECGId];
-    bSuccesiveDifference = abs(bSuccesiveDifference);
+    bSuccesiveDifference  = bRawSample - gbPreviousECG[nECGId];
+    bSuccesiveDifference  = abs(bSuccesiveDifference);
     gbPreviousECG[nECGId] = bRawSample;
 
     /*
@@ -88,8 +88,8 @@ static bool ECGBitReduction_CheckRestartFilter(uint32_t bRawSample, ecg_sens_id 
      */
     if ((abs(bRawSample - gflMeanValue[nECGId]) > BR_THRESHOLD_MEAN_DIFF) && (bSuccesiveDifference > BR_THRESHOLD_SUCCESSIVE_DIFF))
     {
-        gfLastHighAmplitudeFlag[nECGId] = 1;
-        gbSampleCount[nECGId] = 0;
+        gfHighAmpActivatedFlag[nECGId] = true;
+        gbSamplesSinceLastHigh[nECGId] = 0;
     }
 
     /*
@@ -98,34 +98,45 @@ static bool ECGBitReduction_CheckRestartFilter(uint32_t bRawSample, ecg_sens_id 
      * This is identified when the change between consecutive
      * samples is less than BR_THRESHOLD_AMP_SETTLING
      */
-    if (gfLastHighAmplitudeFlag[nECGId])
+    if (gfHighAmpActivatedFlag[nECGId])
     {
-        if ((gbSampleCount[nECGId] > BR_SAMPLE_WINDOW) || (bSuccesiveDifference < BR_THRESHOLD_AMP_SETTLING))
+        // if settling time is reached or ampltitude is less than lower bound,
+        // reset filter
+        if ((gbSamplesSinceLastHigh[nECGId] > BR_MAX_SETTLING_TIME_SAMPLES) || (bSuccesiveDifference < BR_THRESHOLD_AMP_DIFF_TO_RESET))
         {
-            gfLastHighAmplitudeFlag[nECGId] = 0;
-            gbSampleCount[nECGId] = 0;
-            return true;
+            gfHighAmpActivatedFlag[nECGId] = false;
+
+            // if not saturated then reset,
+            // note that if it is saturated, don't reset, wait for next high amp
+            // trigger
+            if (bSuccesiveDifference > 0)
+            {
+                return true;
+            }
         }
-
-        gbSampleCount[nECGId]++;
     }
-
+    // keep count of num samples since high amplitude to track settling time
+    gbSamplesSinceLastHigh[nECGId]++;
+    if (gbSamplesSinceLastHigh[nECGId] > BR_MAX_SAMPLES_SINCE_LAST_HIGH)
+    {
+        gbSamplesSinceLastHigh[nECGId] = BR_MAX_SAMPLES_SINCE_LAST_HIGH;
+    }
     return false;
 }
 
-static int16_t ECGBitReduction_LSBRemoval(double bSample)
+static int16_t ECGBitReduction_LSBRemoval(float bSample)
 {
-    double flProcessedLSB = 0;
+    float flProcessedLSB = 0;
 
-    //remove lsb and return
-    flProcessedLSB = (double)(bSample) / BR_LSB_FACTOR;
+    // remove lsb and return
+    flProcessedLSB = (float)(bSample) / BR_LSB_FACTOR;
 
-    return (int16_t)(floor(flProcessedLSB));
+    return (int16_t)(floorf(flProcessedLSB));
 }
 
-static double ECGBitReduction_MSBRemoval(uint32_t bSample, ecg_sens_id nECGId, bool fRestart)
+static float ECGBitReduction_MSBRemoval(uint32_t bSample, ecg_sens_id nECGId, bool fRestart)
 {
-    double flProcessedMSB = 0;
+    float flProcessedMSB = 0;
 
     // Check arguments
     if (nECGId >= MAX_ECG)
@@ -136,13 +147,12 @@ static double ECGBitReduction_MSBRemoval(uint32_t bSample, ecg_sens_id nECGId, b
     // Check_restart
     gfResetFlagECG[nECGId] = ECGBitReduction_CheckRestartFilter(bSample, nECGId, fRestart);
 
-    // Filter data - XXX remove ecgbr_digital_filter() and replace with standard float-based digital_filter function
-    flProcessedMSB = ecgbr_digital_filter((double)bSample, gflHighpassInput[nECGId], gflHighpassOutput[nECGId], gflHighpassCoeffiecientsA, gflHighpassCoeffiecientsB, 
-        HP_FILTER_COEFF_LEN_A, HP_FILTER_COEFF_LEN_B, HP_FILTER_SIZE, gfResetFlagECG[nECGId], (double)bSample);
-    
+    // Filter data
+    flProcessedMSB = digital_filter((float)bSample, gflHighpassInput[nECGId], gflHighpassOutput[nECGId], gflHighpassCoeffiecientsA, gflHighpassCoeffiecientsB, HP_FILTER_COEFF_LEN_A, HP_FILTER_COEFF_LEN_B, HP_FILTER_SIZE, gfResetFlagECG[nECGId], (float)bSample);
+
     // Reset flt flag
     gfResetFlagECG[nECGId] = false;
-    
+
     // Remove msb
     if ((flProcessedMSB >= BR_MSB_THRSHOLD) || (flProcessedMSB <= -1 * BR_MSB_THRSHOLD))
     {
@@ -154,7 +164,7 @@ static double ECGBitReduction_MSBRemoval(uint32_t bSample, ecg_sens_id nECGId, b
 
 int16_t ECGBitReduction_SampleReduction(uint32_t bSample, ecg_sens_id nECGId, bool fRestart)
 {
-    double flProcessedMSB = 0;
+    float flProcessedMSB = 0;
 
     // Check arguments
     if (nECGId >= MAX_ECG)
