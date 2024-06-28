@@ -9,31 +9,32 @@
 // --- Defines and macros ---
 
 // Bit reduction algorithm definitions
-#define BR_THRESHOLD_AMP_SETTLING    100
-#define BR_THRESHOLD_MEAN_DIFF       233333           // 20mv
-#define BR_THRESHOLD_SUCCESSIVE_DIFF 11666            // 1mv
-#define BR_MEAN_SAMPLE_COUNT_RES     0.0009765625f    // 1/1024
-#define BR_SAMPLE_WINDOW             80               // SAMPLES
-#define BR_MSB_TO_REMOVE             5
-#define BR_LSB_TO_REMOVE             7
+#define BR_THRESHOLD_AMP_DIFF_TO_RESET 100              // 0.01mV
+#define BR_THRESHOLD_MEAN_DIFF         233333           // 20mv
+#define BR_THRESHOLD_SUCCESSIVE_DIFF   11666            // 1mv
+#define BR_MEAN_SAMPLE_COUNT_RES       0.0009765625f    // 1/1024
+#define BR_MAX_SETTLING_TIME_SAMPLES   80               // SAMPLES
+#define BR_MAX_SAMPLES_SINCE_LAST_HIGH 90               // Samples
+#define BR_MSB_TO_REMOVE               5
+#define BR_LSB_TO_REMOVE               7
 
 /*
  * MSB_THRSHOLD Formula   (12800000/2)/(2^MSB_TO_REMOVE)
  * 6400000/32
  * 20000 bit reduced threshold
  */
-#define BR_MSB_THRSHOLD              200000
+#define BR_MSB_THRSHOLD                200000
 
 /*
  * LSB_FACTOR   (2^LSB_TO_REMOVE)
  * 2^7 = 128
  */
-#define BR_LSB_FACTOR                128.0f
+#define BR_LSB_FACTOR                  128.0f
 
 // High Pass Filter definitions
-#define HP_FILTER_SIZE               3
-#define HP_FILTER_COEFF_LEN_A        3
-#define HP_FILTER_COEFF_LEN_B        3
+#define HP_FILTER_SIZE                 3
+#define HP_FILTER_COEFF_LEN_A          3
+#define HP_FILTER_COEFF_LEN_B          3
 
 // --- Globals ---
 
@@ -101,7 +102,7 @@ static bool ECGBitReduction_CheckRestartFilter(uint32_t bRawSample, ecg_sens_id 
     {
         // if settling time is reached or ampltitude is less than lower bound,
         // reset filter
-        if ((gbSamplesSinceLastHigh[nECGId] > BR_SAMPLE_WINDOW) || (bSuccesiveDifference < BR_THRESHOLD_AMP_SETTLING))
+        if ((gbSamplesSinceLastHigh[nECGId] > BR_MAX_SETTLING_TIME_SAMPLES) || (bSuccesiveDifference < BR_THRESHOLD_AMP_DIFF_TO_RESET))
         {
             gfHighAmpActivatedFlag[nECGId] = false;
 
@@ -114,9 +115,12 @@ static bool ECGBitReduction_CheckRestartFilter(uint32_t bRawSample, ecg_sens_id 
             }
         }
     }
-    // otherwise keep count of how many samples since high amplitude to
-    // track settling time
+    // keep count of num samples since high amplitude to track settling time
     gbSamplesSinceLastHigh[nECGId]++;
+    if (gbSamplesSinceLastHigh[nECGId] > BR_MAX_SAMPLES_SINCE_LAST_HIGH)
+    {
+        gbSamplesSinceLastHigh[nECGId] = BR_MAX_SAMPLES_SINCE_LAST_HIGH;
+    }
     return false;
 }
 
