@@ -45,20 +45,20 @@ float digital_filter(float dInput, float *pIn, float *pOut, const float *pA, con
     // 5) Apply the feedback coefficients to the output samples
     for (uint8_t i = 1; i < aLength; i++)
     {
-        tmp -= pA[i] * pOut[bFilterOrder - i];
+        tmp -= pA[i] * pOut[bFilterOrder - 1 - i];
     }
 
-    // 6) Shift input and output buffers to make room for the next sample
+    // 6) Normalize by the first feedback coefficient
+    tmp                    /= pA[0];
+    output                  = tmp;
+    pOut[bFilterOrder - 1]  = output;
+
+    // 7) Shift input and output buffers to make room for the next sample
     for (uint8_t i = 1; i < bFilterOrder; i++)
     {
         pIn[i - 1]  = pIn[i];
         pOut[i - 1] = pOut[i];
     }
-
-    // 7) Normalize by the first feedback coefficient
-    tmp                    /= pA[0];
-    output                  = tmp;
-    pOut[bFilterOrder - 1]  = output;
 
     // 8) Return the filtered output sample
     return output;
