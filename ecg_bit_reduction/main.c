@@ -16,8 +16,9 @@ int main(int argc, const char *argv[])
     int   bNumRows           = 0;
 
     // Intermediate data
-    bool    fECGBufferRefresh = true;
-    int16_t bECGReducedData   = 0;
+    bool fECGBufferRefresh = true;    // apply whenever pod is reset, or there
+                                      // is missing data
+    int16_t bECGReducedData = 0;
 
     // Read Inputs from CSV:
     printf("Setting inputs...\r\n");

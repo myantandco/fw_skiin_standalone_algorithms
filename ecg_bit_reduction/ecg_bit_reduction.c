@@ -145,7 +145,6 @@ static float ECGBitReduction_MSBRemoval(uint32_t bSample, ecg_sens_id nECGId, bo
 
     // Filter data
     flProcessedMSB = digital_filter((float)bSample, gflHighpassInput[nECGId], gflHighpassOutput[nECGId], gflHighpassCoeffiecientsA, gflHighpassCoeffiecientsB, HP_FILTER_COEFF_LEN_A, HP_FILTER_COEFF_LEN_B, HP_FILTER_SIZE, gfResetFlagECG[nECGId], (float)bSample);
-    CSVW_WriteCSVSingle("1_filter_float.csv", flProcessedMSB, 2);
 
     // Reset flt flag
     gfResetFlagECG[nECGId] = false;
